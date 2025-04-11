@@ -108,8 +108,9 @@ function exportToExcel() {
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
-  const code = "KM" + Math.floor(1000 + Math.random() * 9000);
-  const link = `https://banhmi.web.app?tich=${code}`;
-  qrCanvas.value = link;
-  document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+  const code = "KM" + Math.floor(1000 + Math.random() * 9000);  // Tạo mã ngẫu nhiên
+  const link = `https://bindayne-112.github.io/admin_tichhop_tao_qr/index.html?tich=${code}`;  // Đảm bảo đây là URL chính xác của bạn
+
+  qrCanvas.value = link;  // Tạo mã QR
+  document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;  // Hiển thị link QR
 }
