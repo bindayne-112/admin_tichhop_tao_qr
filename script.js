@@ -109,7 +109,7 @@ const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size
 
 function taoMaQR() {
   const code = "KM" + Math.floor(1000 + Math.random() * 9000);
-  const link = `https://banhmi.web.app?tich=${code}`;
+  const link = `https://soft-paprenjak-29daad.netlify.app?tich=${code}`;
   qrCanvas.value = link;
   document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
 }
