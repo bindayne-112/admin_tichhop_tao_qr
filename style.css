@@ -1,0 +1,53 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #fff6e5;
+  padding: 30px;
+  text-align: center;
+}
+h1, h2 {
+  color: #ff6600;
+}
+.login-box {
+  margin-top: 60px;
+}
+input, button {
+  padding: 10px;
+  font-size: 16px;
+  margin: 5px;
+}
+button {
+  background-color: #ff9900;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+th {
+  background-color: #ffecb3;
+}
+tr:nth-child(1) td {
+  background-color: #fff3cd;
+  font-weight: bold;
+}
+tr:nth-child(2) td {
+  background-color: #e3f2fd;
+}
+tr:nth-child(3) td {
+  background-color: #d0f0f0;
+}
+.filter-box {
+  margin: 20px;
+}
+.code-display {
+  margin-top: 10px;
+  font-size: 18px;
+  color: #444;
+}
