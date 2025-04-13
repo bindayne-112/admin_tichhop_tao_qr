@@ -24,7 +24,7 @@ function checkPassword() {
 }
 
 function loadData() {
-  fetch(`https://opensheet.elk.sh/${sheetId}/${sheetName}`)
+  fetch(https://opensheet.elk.sh/${sheetId}/${sheetName})
     .then(res => res.json())
     .then(data => {
       fullData = data.map(row => {
@@ -47,7 +47,7 @@ function renderDataTable(data) {
   tbody.innerHTML = "";
   data.forEach(row => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${row.phone}</td><td>${row.time}</td>`;
+    tr.innerHTML = <td>${row.phone}</td><td>${row.time}</td>;
     tbody.appendChild(tr);
   });
   new simpleDatatables.DataTable("#dataTable");
@@ -65,7 +65,7 @@ function renderRanking(data) {
   sorted.forEach(([phone, count], index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
+    tr.innerHTML = <td>${medal}</td><td>${phone}</td><td>${count}</td>;
     tbody.appendChild(tr);
   });
 }
@@ -104,20 +104,12 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Tạo mã QR từ Google Apps Script và hiển thị link GitHub Pages
+// Tạo mã QR
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
-  fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
-    .then(res => res.json())
-    .then(data => {
-      const link = data.link;
-      if (!link) throw new Error("Không có mã trả về");
-      qrCanvas.value = link;
-      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
-    })
-    .catch(err => {
-      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
-      console.error(err);
-    });
+  const code = "KM" + Math.floor(1000 + Math.random() * 9000);
+  const link = https://soft-paprenjak-29daad.netlify.app/?tich=${code};
+  qrCanvas.value = link;
+  document.getElementById("codeDisplay").innerText = Link QR: ${link};
 }
