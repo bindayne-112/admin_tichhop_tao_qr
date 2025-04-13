@@ -104,12 +104,15 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// Tạo mã QR
+// Tạo mã QR và ghi vào Sheet + tạo link GitHub Pages
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
-  const code = "KM" + Math.floor(1000 + Math.random() * 9000);
-  const link = `https://soft-paprenjak-29daad.netlify.app/?tich=${code}`;
-  qrCanvas.value = link;
-  document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+  fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
+    .then(res => res.json())
+    .then(data => {
+      const link = data.link;
+      qrCanvas.value = link;
+      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+    });
 }
