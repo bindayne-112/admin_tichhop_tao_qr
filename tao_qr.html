@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -9,7 +8,6 @@
     .qr-box { background: white; padding: 1.5em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; text-align: center; }
     .qr-img { margin-top: 1em; }
     button { padding: 10px 20px; background: orange; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
-    input, textarea { width: 100%; padding: 0.5em; margin: 0.5em 0; }
     .link-box { word-break: break-word; background: #f1f1f1; padding: 0.5em; border-radius: 6px; margin-top: 1em; }
   </style>
 </head>
@@ -21,32 +19,20 @@
     <div id="qrLink" class="link-box"></div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <script>
-    let soThuTu = 1;
-    function pad(num) { return num.toString().padStart(3, '0'); }
-    function getToday() {
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      return `${yyyy}${mm}${dd}`;
-    }
     function taoQR() {
-      const base = `KM${getToday()}-${pad(soThuTu++)}`;
-      const link = `https://bindayne-112.github.io/banhmi-tichdiem/?tich=${base}`;
+      fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
+        .then(res => res.json())
+        .then(data => {
+          const { code, link } = data;
 
-      const qr = new QRious({
-        element: document.createElement('canvas'),
-        value: link,
-        size: 250
-      });
-
-      const qrResult = document.getElementById('qrResult');
-      qrResult.innerHTML = '';
-      qrResult.appendChild(qr.element);
-
-      document.getElementById('qrLink').innerHTML = `<strong>Link:</strong> <br>${link}`;
+          const qrImg = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(link)}&size=250x250`;
+          document.getElementById('qrResult').innerHTML = `<img src="${qrImg}" alt="QR Code">`;
+          document.getElementById('qrLink').innerHTML = `<strong>Link QR:</strong><br><a href="${link}" target="_blank">${link}</a>`;
+        })
+        .catch(() => {
+          document.getElementById('qrLink').innerText = "❌ Lỗi tạo mã QR. Vui lòng thử lại.";
+        });
     }
   </script>
 </body>
