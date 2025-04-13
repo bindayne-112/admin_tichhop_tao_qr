@@ -104,20 +104,20 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// Tạo mã QR và ghi vào Sheet + tạo link GitHub Pages
+// ✅ Tạo mã QR từ Google Apps Script và hiển thị link GitHub Pages
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
     .then(res => res.json())
     .then(data => {
-      const link = data.link;
-      if (!link) throw new Error("Không có link");
+      if (!data.code) throw new Error("Không có mã trả về");
+      const link = `https://bindayne-112.github.io/banhmi-tichdiem/?tich=${data.code}`;
       qrCanvas.value = link;
       document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
     })
     .catch(err => {
-      document.getElementById("codeDisplay").innerText = "Lỗi tạo mã QR!";
+      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
       console.error(err);
     });
 }
