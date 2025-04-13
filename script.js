@@ -111,8 +111,8 @@ function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
     .then(res => res.json())
     .then(data => {
-      if (!data.code) throw new Error("Không có mã trả về");
-      const link = `https://bindayne-112.github.io/banhmi-tichdiem/?tich=${data.code}`;
+      const link = data.link;
+      if (!link) throw new Error("Không có mã trả về");
       qrCanvas.value = link;
       document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
     })
