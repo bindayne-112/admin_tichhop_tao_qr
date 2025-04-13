@@ -1,39 +1,123 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>Admin - Tạo mã QR</title>
-  <style>
-    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
-    .qr-box { background: white; padding: 1.5em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; text-align: center; }
-    .qr-img { margin-top: 1em; }
-    button { padding: 10px 20px; background: orange; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
-    .link-box { word-break: break-word; background: #f1f1f1; padding: 0.5em; border-radius: 6px; margin-top: 1em; }
-  </style>
-</head>
-<body>
-  <div class="qr-box">
-    <h2>Tạo mã QR cho khách</h2>
-    <button onclick="taoQR()">Tạo mã QR mới</button>
-    <div id="qrResult" class="qr-img"></div>
-    <div id="qrLink" class="link-box"></div>
-  </div>
+const sheetId = "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo";
+const sheetName = "TichDiem_OngKoi";
+const password = "Testmkbmok";
+let fullData = [];
 
-  <script>
-    function taoQR() {
-      fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
-        .then(res => res.json())
-        .then(data => {
-          const { code, link } = data;
+if (localStorage.getItem("isLoggedIn") === "true") {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainScreen").style.display = "block";
+    loadData();
+  });
+}
 
-          const qrImg = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(link)}&size=250x250`;
-          document.getElementById('qrResult').innerHTML = `<img src="${qrImg}" alt="QR Code">`;
-          document.getElementById('qrLink').innerHTML = `<strong>Link QR:</strong><br><a href="${link}" target="_blank">${link}</a>`;
-        })
-        .catch(() => {
-          document.getElementById('qrLink').innerText = "❌ Lỗi tạo mã QR. Vui lòng thử lại.";
-        });
-    }
-  </script>
-</body>
-</html>
+function checkPassword() {
+  const input = document.getElementById("password").value;
+  if (input === password) {
+    localStorage.setItem("isLoggedIn", "true");
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainScreen").style.display = "block";
+    loadData();
+  } else {
+    document.getElementById("loginError").innerText = "Sai mật khẩu!";
+  }
+}
+
+function loadData() {
+  fetch(`https://opensheet.elk.sh/${sheetId}/${sheetName}`)
+    .then(res => res.json())
+    .then(data => {
+      fullData = data.map(row => {
+        let phone = row["SỐ ĐIỆN THOẠI"];
+        if (phone && phone.length === 9 && !isNaN(phone)) {
+          phone = "0" + phone;
+        }
+        return {
+          phone,
+          time: row["THỜI GIAN"]
+        };
+      }).filter(row => row.phone && row.phone.length === 10 && !isNaN(row.phone));
+      renderDataTable(fullData);
+      renderRanking(fullData);
+    });
+}
+
+function renderDataTable(data) {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${row.phone}</td><td>${row.time}</td>`;
+    tbody.appendChild(tr);
+  });
+  new simpleDatatables.DataTable("#dataTable");
+}
+
+function renderRanking(data) {
+  const counts = {};
+  data.forEach(row => {
+    const phone = row.phone;
+    counts[phone] = (counts[phone] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const tbody = document.querySelector("#rankingTable tbody");
+  tbody.innerHTML = "";
+  sorted.forEach(([phone, count], index) => {
+    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilter() {
+  const search = document.getElementById("searchPhone").value;
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  const filtered = fullData.filter(row => {
+    const matchPhone = search === "" || row.phone.includes(search);
+    const matchDate = (!start || new Date(row.time) >= new Date(start)) &&
+                      (!end || new Date(row.time) <= new Date(end));
+    return matchPhone && matchDate;
+  });
+  renderDataTable(filtered);
+  renderRanking(filtered);
+}
+
+function resetFilter() {
+  renderDataTable(fullData);
+  renderRanking(fullData);
+  document.getElementById("searchPhone").value = "";
+  document.getElementById("startDate").value = "";
+  document.getElementById("endDate").value = "";
+}
+
+function exportToExcel() {
+  const table = document.getElementById("dataTable").outerHTML;
+  const blob = new Blob(["﻿" + table], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "TichDiem.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ✅ Tạo mã QR từ Google Apps Script và hiển thị link GitHub Pages
+const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
+
+function taoMaQR() {
+  fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
+    .then(res => res.json())
+    .then(data => {
+      const link = data.link;
+      if (!link) throw new Error("Không có mã trả về");
+      qrCanvas.value = link;
+      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+    })
+    .catch(err => {
+      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
+      console.error(err);
+    });
+}
