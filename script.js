@@ -104,22 +104,20 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// Tạo mã QR và ghi vào Sheet QR, nhận link trả về
+// Tạo mã QR và ghi vào Sheet + tạo link GitHub Pages
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
     .then(res => res.json())
     .then(data => {
-      if (data.link) {
-        const link = data.link;
-        qrCanvas.value = link;
-        document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
-      } else {
-        document.getElementById("codeDisplay").innerText = "❌ Không lấy được link QR!";
-      }
+      const link = data.link;
+      if (!link) throw new Error("Không có link");
+      qrCanvas.value = link;
+      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
     })
-    .catch(() => {
-      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
+    .catch(err => {
+      document.getElementById("codeDisplay").innerText = "Lỗi tạo mã QR!";
+      console.error(err);
     });
 }
