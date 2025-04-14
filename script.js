@@ -104,12 +104,20 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Tạo mã QR cơ bản (dùng link Netlify cũ)
+// ✅ Tạo mã QR từ Apps Script, ghi vào MaQR_HopLe, trả về link GitHub Pages
 const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
 
 function taoMaQR() {
-  const code = "KM" + Math.floor(1000 + Math.random() * 9000);
-  const link = `https://bindayne-112.github.io/banhmi-tichdiem/?tich=${code}`;
-  qrCanvas.value = link;
-  document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+  fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
+    .then(res => res.json())
+    .then(data => {
+      const link = data.link;
+      if (!link) throw new Error("Không có link trả về");
+      qrCanvas.value = link;
+      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+    })
+    .catch(err => {
+      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
+      console.error(err);
+    });
 }
