@@ -37,8 +37,13 @@ function loadData() {
           time: row["THỜI GIAN"]
         };
       }).filter(row => row.phone && row.phone.length === 10 && !isNaN(row.phone));
+
       renderDataTable(fullData);
       renderRanking(fullData);
+    })
+    .catch(err => {
+      console.error("Lỗi khi tải dữ liệu:", err);
+      alert("❌ Không thể tải dữ liệu từ Google Sheet. Vui lòng kiểm tra kết nối.");
     });
 }
 
@@ -56,12 +61,12 @@ function renderDataTable(data) {
 function renderRanking(data) {
   const counts = {};
   data.forEach(row => {
-    const phone = row.phone;
-    counts[phone] = (counts[phone] || 0) + 1;
+    counts[row.phone] = (counts[row.phone] || 0) + 1;
   });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const tbody = document.querySelector("#rankingTable tbody");
   tbody.innerHTML = "";
+
   sorted.forEach(([phone, count], index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
     const tr = document.createElement("tr");
@@ -104,8 +109,13 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Tạo mã QR từ Apps Script, ghi vào MaQR_HopLe, trả về link GitHub Pages
-const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
+// ✅ Tạo mã QR từ Apps Script và hiển thị
+document.addEventListener("DOMContentLoaded", () => {
+  const canvasEl = document.getElementById("qrCanvas");
+  if (canvasEl) {
+    window.qrCanvas = new QRious({ element: canvasEl, size: 250 });
+  }
+});
 
 function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
@@ -113,11 +123,11 @@ function taoMaQR() {
     .then(data => {
       const link = data.link;
       if (!link) throw new Error("Không có link trả về");
-      qrCanvas.value = link;
+      if (window.qrCanvas) qrCanvas.value = link;
       document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
     })
     .catch(err => {
       document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
-      console.error(err);
+      console.error("Lỗi tạo mã QR:", err);
     });
 }
