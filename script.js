@@ -65,4 +65,51 @@ function renderRanking(data) {
   sorted.forEach(([phone, count], index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${
+    tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilter() {
+  const search = document.getElementById("searchPhone").value;
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  const filtered = fullData.filter(row => {
+    const matchPhone = search === "" || row.phone.includes(search);
+    const matchDate = (!start || new Date(row.time) >= new Date(start)) &&
+                      (!end || new Date(row.time) <= new Date(end));
+    return matchPhone && matchDate;
+  });
+  renderDataTable(filtered);
+  renderRanking(filtered);
+}
+
+function resetFilter() {
+  renderDataTable(fullData);
+  renderRanking(fullData);
+  document.getElementById("searchPhone").value = "";
+  document.getElementById("startDate").value = "";
+  document.getElementById("endDate").value = "";
+}
+
+function exportToExcel() {
+  const table = document.getElementById("dataTable").outerHTML;
+  const blob = new Blob(["﻿" + table], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "TichDiem.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ✅ Tạo mã QR cơ bản (dùng link Netlify cũ)
+const qrCanvas = new QRious({ element: document.getElementById("qrCanvas"), size: 250 });
+
+function taoMaQR() {
+  const code = "KM" + Math.floor(1000 + Math.random() * 9000);
+  const link = `https://soft-paprenjak-29daad.netlify.app/?tich=${code}`;
+  qrCanvas.value = link;
+  document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+}
