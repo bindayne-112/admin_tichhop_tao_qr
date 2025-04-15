@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function taoMaQR() {
-  fetch("https://script.google.com/macros/s/AKfycbysKdONReVQTU3P7Y0jLuKckYqbXItdj53O6ETolZ6B0qoLO0OWmV7FQ0pO7s14AtQ4/exec")
+  fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
     .then(res => res.json())
     .then(data => {
       const link = data.link;
