@@ -117,13 +117,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR (sử dụng proxy tránh CORS)
+// ✅ Tạo mã QR từ Apps Script (dùng proxy ổn định)
 function taoMaQR() {
-  const proxy = "https://corsproxy.io/?https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+  const targetUrl = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
   fetch(proxy)
     .then(res => res.json())
-    .then(data => {
+    .then(({ contents }) => {
+      const data = JSON.parse(contents);
       const link = decodeURIComponent(data.link);
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
@@ -141,11 +143,13 @@ function kiemTraMaQRDaDung() {
   const match = codeText.match(/\?tich=([\w-]+)/);
   if (!match) return;
   const maQR = match[1];
-  const checkUrl = `https://corsproxy.io/?https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
+  const checkTarget = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
+  const checkProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(checkTarget)}`;
 
-  fetch(checkUrl)
+  fetch(checkProxy)
     .then(res => res.json())
-    .then(data => {
+    .then(({ contents }) => {
+      const data = JSON.parse(contents);
       if (data.status === "USED") {
         console.log("✅ Mã QR đã dùng → tạo mã mới...");
         taoMaQR();
