@@ -29,13 +29,8 @@ function loadData() {
     .then(data => {
       fullData = data.map(row => {
         let phone = row["SỐ ĐIỆN THOẠI"];
-        if (phone && phone.length === 9 && !isNaN(phone)) {
-          phone = "0" + phone;
-        }
-        return {
-          phone,
-          time: row["THỜI GIAN"]
-        };
+        if (phone && phone.length === 9 && !isNaN(phone)) phone = "0" + phone;
+        return { phone, time: row["THỜI GIAN"] };
       }).filter(row => row.phone && row.phone.length === 10 && !isNaN(row.phone));
 
       renderDataTable(fullData);
@@ -66,7 +61,6 @@ function renderRanking(data) {
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const tbody = document.querySelector("#rankingTable tbody");
   tbody.innerHTML = "";
-
   sorted.forEach(([phone, count], index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
     const tr = document.createElement("tr");
@@ -109,7 +103,7 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ QR Code canvas khởi tạo
+// ✅ Khởi tạo QR Canvas
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("qrCanvas");
   if (canvasEl) {
@@ -117,15 +111,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR (dùng proxy ổn định)
+// ✅ Tạo mã QR từ Apps Script (dùng proxy ổn định)
 function taoMaQR() {
   const targetUrl = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+  const proxy = `https://corsproxy.io/?${targetUrl}`;
 
   fetch(proxy)
     .then(res => res.json())
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
+    .then(data => {
       const link = decodeURIComponent(data.link);
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
@@ -137,20 +130,17 @@ function taoMaQR() {
     });
 }
 
-// ✅ Tự kiểm tra QR đã dùng
+// ✅ Kiểm tra nếu mã QR đã dùng thì tạo lại
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
   const match = codeText.match(/\?tich=([\w-]+)/);
   if (!match) return;
   const maQR = match[1];
+  const checkUrl = `https://corsproxy.io/?https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
 
-  const checkTarget = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
-  const checkProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(checkTarget)}`;
-
-  fetch(checkProxy)
+  fetch(checkUrl)
     .then(res => res.json())
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
+    .then(data => {
       if (data.status === "USED") {
         console.log("✅ Mã QR đã dùng → tạo mã mới...");
         taoMaQR();
@@ -161,4 +151,5 @@ function kiemTraMaQRDaDung() {
     });
 }
 
+// ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
