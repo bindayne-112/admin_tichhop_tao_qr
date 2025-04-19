@@ -99,7 +99,7 @@ function resetFilter() {
 
 function exportToExcel() {
   const table = document.getElementById("dataTable").outerHTML;
-  const blob = new Blob(["﻿" + table], { type: "application/vnd.ms-excel" });
+  const blob = new Blob(["\ufeff" + table], { type: "application/vnd.ms-excel" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -131,3 +131,26 @@ function taoMaQR() {
       console.error("Lỗi tạo mã QR:", err);
     });
 }
+
+// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
+function kiemTraMaQRDaDung() {
+  const codeText = document.getElementById("codeDisplay").innerText;
+  const match = codeText.match(/\\?tich=([A-Z0-9\\-]+)/);
+  if (!match) return;
+  const maQR = match[1];
+
+  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?checkMaQR=${maQR}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.daDung) {
+        console.log("✅ Mã QR đã dùng → tạo mã mới...");
+        taoMaQR();
+      }
+    })
+    .catch(err => {
+      console.error("Lỗi khi kiểm tra mã QR:", err);
+    });
+}
+
+// ✅ Kiểm tra mỗi 5 giây
+setInterval(kiemTraMaQRDaDung, 5000);
