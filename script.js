@@ -117,11 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR từ Apps Script (đã fix CORS)
+// ✅ Tạo mã QR (sử dụng proxy tránh CORS)
 function taoMaQR() {
-  const url = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+  const proxy = "https://corsproxy.io/?https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
 
-  fetch(url)
+  fetch(proxy)
     .then(res => res.json())
     .then(data => {
       const link = decodeURIComponent(data.link);
@@ -135,14 +135,13 @@ function taoMaQR() {
     });
 }
 
-// ✅ Kiểm tra mã QR đã dùng chưa → nếu có thì tạo mã mới
+// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo lại
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
   const match = codeText.match(/\?tich=([\w-]+)/);
   if (!match) return;
   const maQR = match[1];
-
-  const checkUrl = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
+  const checkUrl = `https://corsproxy.io/?https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
 
   fetch(checkUrl)
     .then(res => res.json())
