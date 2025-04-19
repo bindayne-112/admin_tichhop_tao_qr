@@ -109,7 +109,7 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Khởi tạo QR Canvas
+// ✅ QR Code canvas khởi tạo
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("qrCanvas");
   if (canvasEl) {
@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR từ Apps Script (dùng proxy ổn định)
+// ✅ Tạo mã QR (dùng proxy ổn định)
 function taoMaQR() {
   const targetUrl = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
   const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
@@ -137,12 +137,13 @@ function taoMaQR() {
     });
 }
 
-// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo lại
+// ✅ Tự kiểm tra QR đã dùng
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
   const match = codeText.match(/\?tich=([\w-]+)/);
   if (!match) return;
   const maQR = match[1];
+
   const checkTarget = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
   const checkProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(checkTarget)}`;
 
@@ -160,5 +161,4 @@ function kiemTraMaQRDaDung() {
     });
 }
 
-// ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
