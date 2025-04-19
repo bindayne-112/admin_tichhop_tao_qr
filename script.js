@@ -117,15 +117,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR mới (dùng proxy ổn định)
+// ✅ Tạo mã QR dùng proxy ổn định
 function taoMaQR() {
   const url = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const proxy = `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`;
 
   fetch(proxy)
-    .then(res => res.ok ? res.json() : Promise.reject("Lỗi proxy"))
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
+    .then(res => res.json())
+    .then(data => {
       const link = decodeURIComponent(data.link || "");
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
@@ -137,7 +136,7 @@ function taoMaQR() {
     });
 }
 
-// ✅ Tự động kiểm tra mã QR đã dùng → tạo mã mới
+// ✅ Kiểm tra mã QR đã dùng chưa
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
   const match = codeText.match(/\?tich=([\w-]+)/);
@@ -145,12 +144,11 @@ function kiemTraMaQRDaDung() {
 
   const maQR = match[1];
   const checkUrl = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(checkUrl)}`;
+  const proxy = `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(checkUrl)}`;
 
   fetch(proxy)
-    .then(res => res.ok ? res.json() : Promise.reject("Lỗi proxy kiểm tra"))
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
+    .then(res => res.json())
+    .then(data => {
       if (data.status === "USED") {
         console.log("✅ Mã QR đã dùng → tạo mã mới...");
         taoMaQR();
@@ -161,5 +159,5 @@ function kiemTraMaQRDaDung() {
     });
 }
 
-// ✅ Tự động kiểm tra mỗi 5 giây
+// ✅ Tự kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
