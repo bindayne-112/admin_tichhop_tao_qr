@@ -109,7 +109,7 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Tạo mã QR từ Apps Script và hiển thị
+// ✅ Khởi tạo QR Canvas
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("qrCanvas");
   if (canvasEl) {
@@ -117,29 +117,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ✅ Tạo mã QR từ Apps Script (tránh CORS)
 function taoMaQR() {
-  fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
-    .then(res => res.json())
-    .then(data => {
-      const link = decodeURIComponent(data.link); // ✅ Giải mã để link đúng
-      if (!link) throw new Error("Không có link trả về");
-      if (window.qrCanvas) qrCanvas.value = link;
-      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
-    })
-    .catch(err => {
-      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
-      console.error("Lỗi tạo mã QR:", err);
+  const proxy = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+
+  fetch(proxy, { method: "GET", mode: "no-cors" }) // workaround tránh CORS
+    .then(() => {
+      // Gọi lại bằng link trung gian (chờ khoảng 0.5s để đảm bảo Apps Script trả dữ liệu)
+      setTimeout(() => {
+        fetch(proxy)
+          .then(res => res.json())
+          .then(data => {
+            const link = decodeURIComponent(data.link);
+            if (!link) throw new Error("Không có link trả về");
+            if (window.qrCanvas) qrCanvas.value = link;
+            document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+          })
+          .catch(err => {
+            document.getElementById("codeDisplay").innerText = "❌ Lỗi khi tạo mã QR!";
+            console.error("Lỗi tạo mã QR:", err);
+          });
+      }, 500);
     });
 }
 
-// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
+// ✅ Kiểm tra mã QR đã dùng chưa → nếu có thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
-  const match = codeText.match(/\?tich=([\w-]+)/); // ✅ Chính xác hơn
+  const match = codeText.match(/\?tich=([\w-]+)/);
   if (!match) return;
   const maQR = match[1];
 
-  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
+  const checkUrl = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
+
+  fetch(checkUrl)
     .then(res => res.json())
     .then(data => {
       if (data.status === "USED") {
