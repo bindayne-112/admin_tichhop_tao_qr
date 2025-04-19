@@ -121,7 +121,7 @@ function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
     .then(res => res.json())
     .then(data => {
-      const link = data.link;
+      const link = decodeURIComponent(data.link); // ✅ Sửa để hiển thị link QR đúng
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
       document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
@@ -135,7 +135,7 @@ function taoMaQR() {
 // ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
-  const match = codeText.match(/\\?tich=([A-Z0-9\\-]+)/);
+  const match = codeText.match(/\\?tich=([\w-]+)/); // ✅ Regex gọn và chính xác hơn
   if (!match) return;
   const maQR = match[1];
 
