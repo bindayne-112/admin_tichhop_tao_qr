@@ -109,7 +109,7 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Khởi tạo QR Canvas
+// ✅ Tạo mã QR từ Apps Script và hiển thị
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("qrCanvas");
   if (canvasEl) {
@@ -117,49 +117,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR từ Apps Script dùng proxy ổn định (allorigins)
 function taoMaQR() {
-  const url = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-
-  fetch(proxy)
+  fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
     .then(res => res.json())
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
-      const link = decodeURIComponent(data.link || "");
+    .then(data => {
+      const link = decodeURIComponent(data.link); // ✅ Giải mã để link đúng
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
       document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
     })
     .catch(err => {
+      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
       console.error("Lỗi tạo mã QR:", err);
-      document.getElementById("codeDisplay").innerText = "❌ Lỗi khi tạo mã QR!";
     });
 }
 
-// ✅ Kiểm tra mã QR đã dùng chưa
+// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
-  const match = codeText.match(/\?tich=([\w-]+)/);
+  const match = codeText.match(/\?tich=([\w-]+)/); // ✅ Chính xác hơn
   if (!match) return;
-
   const maQR = match[1];
-  const checkUrl = `https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`;
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(checkUrl)}`;
 
-  fetch(proxy)
+  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
     .then(res => res.json())
-    .then(({ contents }) => {
-      const data = JSON.parse(contents);
+    .then(data => {
       if (data.status === "USED") {
         console.log("✅ Mã QR đã dùng → tạo mã mới...");
         taoMaQR();
       }
     })
     .catch(err => {
-      console.error("Lỗi kiểm tra mã QR:", err);
+      console.error("Lỗi khi kiểm tra mã QR:", err);
     });
 }
 
-// ✅ Tự kiểm tra mỗi 5 giây
+// ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
