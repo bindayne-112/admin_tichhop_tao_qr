@@ -135,22 +135,19 @@ function taoMaQR() {
 // ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const codeText = document.getElementById("codeDisplay").innerText;
-  const match = codeText.match(/\\?tich=([\w-]+)/); // ✅ Regex gọn và chính xác hơn
+  const match = codeText.match(/\?tich=([\w-]+)/); // ✅ Regex gọn và chính xác hơn
   if (!match) return;
   const maQR = match[1];
 
-  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?checkMaQR=${maQR}`)
+  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
     .then(res => res.json())
     .then(data => {
-      if (data.daDung) {
+      if (data.status === "USED") {
         console.log("✅ Mã QR đã dùng → tạo mã mới...");
         taoMaQR();
       }
     })
     .catch(err => {
-      console.error("Lỗi khi kiểm tra mã QR:", err);
-    });
-}
-
-// ✅ Kiểm tra mỗi 5 giây
-setInterval(kiemTraMaQRDaDung, 5000);
+      console.error("Lỗi khi kiểm
+::contentReference[oaicite:3]{index=3}
+ 
