@@ -4,11 +4,39 @@
   <meta charset="UTF-8">
   <title>Admin - Tạo mã QR</title>
   <style>
-    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
-    .qr-box { background: white; padding: 1.5em; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; text-align: center; }
-    .qr-img { margin-top: 1em; }
-    button { padding: 10px 20px; background: orange; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
-    .link-box { word-break: break-word; background: #f1f1f1; padding: 0.5em; border-radius: 6px; margin-top: 1em; }
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      background: #f9f9f9;
+    }
+    .qr-box {
+      background: white;
+      padding: 1.5em;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+      text-align: center;
+    }
+    .qr-img {
+      margin-top: 1em;
+    }
+    button {
+      padding: 10px 20px;
+      background: orange;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .link-box {
+      word-break: break-word;
+      background: #f1f1f1;
+      padding: 0.5em;
+      border-radius: 6px;
+      margin-top: 1em;
+    }
   </style>
 </head>
 <body>
@@ -21,34 +49,27 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <script>
-    let soThuTu = 1;
-    function pad(num) {
-      return num.toString().padStart(3, '0');
-    }
-
-    function getToday() {
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}${mm}${dd}`;
-    }
-
     function taoQR() {
-      const base = `KM${getToday()}-${pad(soThuTu++)}`;
-      const link = `https://bindayne-112.github.io/banhmi-tichdiem/?tich=${base}`;
+      fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
+        .then(res => res.json())
+        .then(data => {
+          const link = decodeURIComponent(data.link);
+          const qr = new QRious({
+            element: document.createElement('canvas'),
+            value: link,
+            size: 250
+          });
 
-      const qr = new QRious({
-        element: document.createElement('canvas'),
-        value: link,
-        size: 250
-      });
+          const qrResult = document.getElementById('qrResult');
+          qrResult.innerHTML = '';
+          qrResult.appendChild(qr.element);
 
-      const qrResult = document.getElementById('qrResult');
-      qrResult.innerHTML = '';
-      qrResult.appendChild(qr.element);
-
-      document.getElementById('qrLink').innerHTML = `<strong>Link:</strong><br>${link}`;
+          document.getElementById('qrLink').innerHTML = `<strong>Link QR:</strong><br>${link}`;
+        })
+        .catch(err => {
+          document.getElementById('qrLink').innerHTML = "❌ Lỗi khi tạo mã QR!";
+          console.error(err);
+        });
     }
   </script>
 </body>
