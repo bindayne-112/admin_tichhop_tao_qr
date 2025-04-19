@@ -117,27 +117,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Tạo mã QR từ Apps Script (tránh CORS)
+// ✅ Tạo mã QR từ Apps Script (đã fix CORS)
 function taoMaQR() {
-  const proxy = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+  const url = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
 
-  fetch(proxy, { method: "GET", mode: "no-cors" }) // workaround tránh CORS
-    .then(() => {
-      // Gọi lại bằng link trung gian (chờ khoảng 0.5s để đảm bảo Apps Script trả dữ liệu)
-      setTimeout(() => {
-        fetch(proxy)
-          .then(res => res.json())
-          .then(data => {
-            const link = decodeURIComponent(data.link);
-            if (!link) throw new Error("Không có link trả về");
-            if (window.qrCanvas) qrCanvas.value = link;
-            document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
-          })
-          .catch(err => {
-            document.getElementById("codeDisplay").innerText = "❌ Lỗi khi tạo mã QR!";
-            console.error("Lỗi tạo mã QR:", err);
-          });
-      }, 500);
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const link = decodeURIComponent(data.link);
+      if (!link) throw new Error("Không có link trả về");
+      if (window.qrCanvas) qrCanvas.value = link;
+      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+    })
+    .catch(err => {
+      document.getElementById("codeDisplay").innerText = "❌ Lỗi khi tạo mã QR!";
+      console.error("Lỗi tạo mã QR:", err);
     });
 }
 
