@@ -64,19 +64,15 @@ tr:nth-child(3) td {
   color: #444;
 }
 
-/* ✅ Làm đẹp & hiển thị nút phân trang ngang */
-.dataTable-pagination ul {
+/* ✅ Phân trang ngang & đẹp */
+.dataTable-pagination {
   display: flex !important;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   padding: 10px 0;
-  margin: 0;
-}
-
-.dataTable-pagination li {
-  list-style: none;
+  margin: 0 auto;
 }
 
 .dataTable-pagination a {
@@ -87,10 +83,12 @@ tr:nth-child(3) td {
   text-decoration: none;
   transition: 0.2s ease;
   font-weight: bold;
+  display: inline-block;
 }
 
 .dataTable-pagination a:hover,
-.dataTable-pagination a.current {
+.dataTable-pagination a.current,
+.dataTable-pagination a.active {
   background-color: #e65100;
   color: #fff !important;
 }
