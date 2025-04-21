@@ -92,3 +92,33 @@ tr:nth-child(3) td {
   background-color: #e65100;
   color: #fff !important;
 }
+/* ✅ Cố định luôn hiển thị phân trang theo hàng ngang */
+.dataTable-pagination {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.dataTable-pagination * {
+  display: inline-block !important;
+  margin: 2px !important;
+}
+
+.dataTable-pagination a {
+  background-color: orange;
+  color: white !important;
+  border-radius: 6px;
+  padding: 6px 12px !important;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.dataTable-pagination a:hover,
+.dataTable-pagination a.current,
+.dataTable-pagination a.active {
+  background-color: #e65100;
+  color: #fff !important;
+}
