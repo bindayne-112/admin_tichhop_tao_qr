@@ -53,7 +53,15 @@
 
     <h2>📲 Tạo mã QR cho khách</h2>
     <button onclick="taoMaQR()">Tạo mã QR mới</button>
-    <div class="code-display" id="codeDisplay"></div>
+
+    <!-- ✅ Đã thay phần hiển thị link QR -->
+    <div style="text-align: center; margin-top: 10px;">
+      <p><strong>Mã QR:</strong> <span id="maQRcode">Đang tạo...</span></p>
+      <button onclick="copyLinkQR()" style="padding: 6px 12px; border-radius: 6px; background-color: orange; color: white; border: none;">
+        📋 Sao chép link QR
+      </button>
+    </div>
+
     <canvas id="qrCanvas"></canvas>
   </div>
 
