@@ -121,23 +121,24 @@ function taoMaQR() {
   fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
     .then(res => res.json())
     .then(data => {
-      const link = decodeURIComponent(data.link); // ✅ Giải mã để link đúng
+      const link = decodeURIComponent(data.link);
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
-      document.getElementById("codeDisplay").innerText = `Link QR: ${link}`;
+
+      const maQR = link.split("?tich=")[1]; // Chỉ hiển thị mã QR
+      document.getElementById("maQRcode").innerText = maQR;
+      document.getElementById("maQRcode").dataset.fullLink = link;
     })
     .catch(err => {
-      document.getElementById("codeDisplay").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
+      document.getElementById("maQRcode").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
       console.error("Lỗi tạo mã QR:", err);
     });
 }
 
 // ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
-  const codeText = document.getElementById("codeDisplay").innerText;
-  const match = codeText.match(/\?tich=([\w-]+)/); // ✅ Chính xác hơn
-  if (!match) return;
-  const maQR = match[1];
+  const maQR = document.getElementById("maQRcode").innerText;
+  if (!maQR || maQR.includes("Lỗi")) return;
 
   fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
     .then(res => res.json())
@@ -154,3 +155,16 @@ function kiemTraMaQRDaDung() {
 
 // ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
+
+// ✅ Sao chép link QR
+function copyLinkQR() {
+  const maSpan = document.getElementById("maQRcode");
+  const fullLink = maSpan.dataset.fullLink;
+  if (!fullLink) {
+    alert("❌ Chưa có link QR để sao chép.");
+    return;
+  }
+  navigator.clipboard.writeText(fullLink)
+    .then(() => alert("✅ Đã sao chép link QR thành công!"))
+    .catch(err => alert("❌ Lỗi khi sao chép: " + err));
+}
