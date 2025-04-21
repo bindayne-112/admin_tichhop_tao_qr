@@ -51,3 +51,29 @@ tr:nth-child(3) td {
   font-size: 18px;
   color: #444;
 }
+
+/* ✅ Thêm phần làm đẹp phân trang */
+.dataTable-pagination ul {
+  display: flex !important;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0;
+}
+.dataTable-pagination li {
+  list-style: none;
+}
+.dataTable-pagination a {
+  background-color: orange;
+  color: white !important;
+  border-radius: 6px;
+  padding: 6px 12px;
+  text-decoration: none;
+  transition: 0.2s ease;
+  font-weight: bold;
+}
+.dataTable-pagination a:hover,
+.dataTable-pagination a.current {
+  background-color: #e65100;
+  color: #fff !important;
+}
