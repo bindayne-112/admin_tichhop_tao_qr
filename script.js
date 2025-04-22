@@ -7,6 +7,13 @@ const APP_URL    = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6
 let fullData    = [];
 let currentLink = "";
 
+/**
+ * Hàm tạo URL qua allorigins để phá CORS
+ */
+function proxyUrl(url) {
+  return "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+}
+
 // Giữ trạng thái đăng nhập qua localStorage
 if (localStorage.getItem("isLoggedIn") === "true") {
   document.addEventListener("DOMContentLoaded", () => {
@@ -39,10 +46,7 @@ function loadData() {
         if (phone && phone.length === 9 && !isNaN(phone)) {
           phone = "0" + phone;
         }
-        return {
-          phone,
-          time: row["THỜI GIAN"]
-        };
+        return { phone, time: row["THỜI GIAN"] };
       }).filter(r => r.phone && r.phone.length === 10 && !isNaN(r.phone));
 
       renderDataTable(fullData);
@@ -69,16 +73,13 @@ function renderDataTable(data) {
 // Hiển thị bảng xếp hạng khách
 function renderRanking(data) {
   const counts = {};
-  data.forEach(row => {
-    counts[row.phone] = (counts[row.phone] || 0) + 1;
-  });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  data.forEach(r => counts[r.phone] = (counts[r.phone]||0) + 1);
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const tbody  = document.querySelector("#rankingTable tbody");
   tbody.innerHTML = "";
-
-  sorted.forEach(([phone, count], idx) => {
-    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx+1;
-    const tr    = document.createElement("tr");
+  sorted.forEach(([phone,count],i) => {
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1;
+    const tr = document.createElement("tr");
     tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
     tbody.appendChild(tr);
   });
@@ -86,13 +87,13 @@ function renderRanking(data) {
 
 // Lọc theo số điện thoại và khoảng thời gian
 function applyFilter() {
-  const search = document.getElementById("searchPhone").value;
-  const start  = document.getElementById("startDate").value;
-  const end    = document.getElementById("endDate").value;
-  const filtered = fullData.filter(row => {
-    const okPhone = !search || row.phone.includes(search);
-    const t       = new Date(row.time);
-    const okDate  = (!start || t >= new Date(start)) && (!end || t <= new Date(end));
+  const s = document.getElementById("searchPhone").value;
+  const st= document.getElementById("startDate").value;
+  const en= document.getElementById("endDate").value;
+  const filtered = fullData.filter(r => {
+    const okPhone = !s || r.phone.includes(s);
+    const t       = new Date(r.time);
+    const okDate  = (!st || t >= new Date(st)) && (!en || t <= new Date(en));
     return okPhone && okDate;
   });
   renderDataTable(filtered);
@@ -110,12 +111,11 @@ function resetFilter() {
 
 // Xuất bảng thành file Excel
 function exportToExcel() {
-  const html  = document.getElementById("dataTable").outerHTML;
-  const blob  = new Blob(["\ufeff" + html], { type: "application/vnd.ms-excel" });
-  const url   = URL.createObjectURL(blob);
-  const a     = document.createElement("a");
-  a.href      = url;
-  a.download  = "TichDiem.xlsx";
+  const blob = new Blob(["\ufeff"+document.getElementById("dataTable").outerHTML],
+                        { type:"application/vnd.ms-excel" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url; a.download="TichDiem.xlsx";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -123,23 +123,22 @@ function exportToExcel() {
 
 // Khởi tạo canvas QRious
 document.addEventListener("DOMContentLoaded", () => {
-  const canvasEl = document.getElementById("qrCanvas");
-  if (canvasEl) window.qrCanvas = new QRious({ element: canvasEl, size: 250 });
+  const c = document.getElementById("qrCanvas");
+  if (c) window.qrCanvas = new QRious({ element: c, size: 250 });
 });
 
 // 1) Tạo mã QR liên tục (tại quán)
 function taoMaQR() {
-  fetch(APP_URL)
+  fetch(proxyUrl(APP_URL))
     .then(res => res.json())
     .then(data => {
       const link = decodeURIComponent(data.link);
-      if (!link) throw new Error("Không có link trả về");
       currentLink = link;
       if (window.qrCanvas) qrCanvas.value = link;
       const code = link.split("?tich=")[1];
       const span = document.getElementById("maQRcode");
-      span.innerText               = code;
-      span.dataset.fullLink        = link;
+      span.innerText        = code;
+      span.dataset.fullLink = link;
     })
     .catch(err => {
       const span = document.getElementById("maQRcode");
@@ -154,22 +153,21 @@ function taoQRInSan() {
   if (!soLuong || isNaN(soLuong)) {
     return alert("❌ Vui lòng nhập số hợp lệ!");
   }
-  fetch(`${APP_URL}?action=taoQRInSan&soluong=${soLuong}`)
+  fetch(proxyUrl(`${APP_URL}?action=taoQRInSan&soluong=${soLuong}`))
     .then(res => res.text())
     .then(msg => alert(msg))
     .catch(err => alert("❌ Lỗi khi tạo mã in sẵn: " + err));
 }
 
-// 3) Kiểm tra mã QR hiện tại đã dùng chưa, nếu đã dùng thì sinh mã mới
+// 3) Kiểm tra mã QR đã dùng, nếu USED thì tự động tạo mới
 function kiemTraMaQRDaDung() {
   const code = document.getElementById("maQRcode").innerText;
   if (!code || code.includes("Lỗi")) return;
-
-  fetch(`${APP_URL}?check=1&code=${code}`)
+  fetch(proxyUrl(`${APP_URL}?check=1&code=${code}`))
     .then(res => res.json())
-    .then(data => {
-      if (data.status === "USED") {
-        console.log("🔄 Mã QR đã dùng, tạo lại...");
+    .then(d => {
+      if (d.status === "USED") {
+        console.log("🔄 Mã QR đã dùng, sinh lại...");
         taoMaQR();
       }
     })
