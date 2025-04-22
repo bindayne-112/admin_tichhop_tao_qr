@@ -168,3 +168,52 @@ function copyLinkQR() {
     .then(() => alert("✅ Đã sao chép link QR thành công!"))
     .catch(err => alert("❌ Lỗi khi sao chép: " + err));
 }
+// ——— Hàm tạo hàng loạt QR để in ———
+function taoQRInSan() {
+  const soLuong = prompt("Bạn muốn tạo bao nhiêu mã QR in sẵn?", "12");
+  const n = parseInt(soLuong, 10);
+  if (!n || n <= 0) return;
+
+  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?batch=${n}`)
+    .then(res => res.json())
+    .then(arr => {
+      const container = document.getElementById("qrBatchContainer");
+      container.innerHTML = "";
+      container.style.display = "flex";
+      arr.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "batch-item";
+        div.style.textAlign = "center";
+        div.style.width = "80mm"; // chiều rộng mỗi ô QR
+        div.innerHTML = `
+          <img src="${item.link}"
+               style="width:70mm; height:70mm; display:block; margin:auto;" />
+          <div style="font-size:12px; margin-top:4px;">${item.code}</div>
+        `;
+        container.appendChild(div);
+      });
+      // Hiện nút in
+      document.getElementById("printBatchBtn").style.display = "inline-block";
+    })
+    .catch(err => {
+      console.error("Lỗi tạo QR batch:", err);
+      alert("❌ Tạo hàng loạt QR thất bại — kiểm tra console.");
+    });
+}
+
+// ——— Hàm mở trang in A4 ———
+function printBatch() {
+  const content = document.getElementById("qrBatchContainer").innerHTML;
+  const css = `
+    <style>
+      @page { size: A4 portrait; margin: 10mm; }
+      body { margin:0; padding:0; display:flex; flex-wrap:wrap; gap:10px; }
+      .batch-item { page-break-inside: avoid; }
+    </style>`;
+  const html = `<html><head><title>In QR Codes</title>${css}</head>
+                <body>${content}</body></html>`;
+  const w = window.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
