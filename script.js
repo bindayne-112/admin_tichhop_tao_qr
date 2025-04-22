@@ -1,6 +1,9 @@
 const sheetId = "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo";
 const sheetName = "TichDiem_OngKoi";
 const password = "Testmkbmok";
+const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+const proxy = url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+
 let fullData = [];
 
 if (localStorage.getItem("isLoggedIn") === "true") {
@@ -32,12 +35,8 @@ function loadData() {
         if (phone && phone.length === 9 && !isNaN(phone)) {
           phone = "0" + phone;
         }
-        return {
-          phone,
-          time: row["THỜI GIAN"]
-        };
+        return { phone, time: row["THỜI GIAN"] };
       }).filter(row => row.phone && row.phone.length === 10 && !isNaN(row.phone));
-
       renderDataTable(fullData);
       renderRanking(fullData);
     })
@@ -60,15 +59,12 @@ function renderDataTable(data) {
 
 function renderRanking(data) {
   const counts = {};
-  data.forEach(row => {
-    counts[row.phone] = (counts[row.phone] || 0) + 1;
-  });
+  data.forEach(row => counts[row.phone] = (counts[row.phone] || 0) + 1);
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const tbody = document.querySelector("#rankingTable tbody");
   tbody.innerHTML = "";
-
   sorted.forEach(([phone, count], index) => {
-    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
+    const medal = ["🥇","🥈","🥉"][index] || (index + 1);
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
     tbody.appendChild(tr);
@@ -109,74 +105,58 @@ function exportToExcel() {
   document.body.removeChild(a);
 }
 
-// ✅ Tạo mã QR từ Apps Script và hiển thị
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("qrCanvas");
-  if (canvasEl) {
-    window.qrCanvas = new QRious({ element: canvasEl, size: 250 });
-  }
+  if (canvasEl) window.qrCanvas = new QRious({ element: canvasEl, size: 250 });
 });
 
 function taoMaQR() {
-  fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
+  fetch(proxy(BASE_SCRIPT_URL))
     .then(res => res.json())
-    .then(data => {
+    .then(response => {
+      const data = JSON.parse(response.contents);
       const link = decodeURIComponent(data.link);
-      if (!link) throw new Error("Không có link trả về");
-      if (window.qrCanvas) qrCanvas.value = link;
-
-      const maQR = link.split("?tich=")[1]; // Chỉ hiển thị mã QR
+      window.qrCanvas.value = link;
+      const maQR = link.split("?tich=")[1];
       document.getElementById("maQRcode").innerText = maQR;
       document.getElementById("maQRcode").dataset.fullLink = link;
     })
     .catch(err => {
-      document.getElementById("maQRcode").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
+      document.getElementById("maQRcode").innerText = "❌ Lỗi kết nối!";
       console.error("Lỗi tạo mã QR:", err);
     });
 }
 
-// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const maQR = document.getElementById("maQRcode").innerText;
   if (!maQR || maQR.includes("Lỗi")) return;
-
-  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
+  fetch(proxy(`${BASE_SCRIPT_URL}?check=1&code=${maQR}`))
     .then(res => res.json())
-    .then(data => {
-      if (data.status === "USED") {
-        console.log("✅ Mã QR đã dùng → tạo mã mới...");
-        taoMaQR();
-      }
+    .then(response => {
+      const data = JSON.parse(response.contents);
+      if (data.status === "USED") taoMaQR();
     })
-    .catch(err => {
-      console.error("Lỗi khi kiểm tra mã QR:", err);
-    });
+    .catch(err => console.error("Lỗi khi kiểm tra mã QR:", err));
 }
 
-// ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
 
-// ✅ Sao chép link QR
 function copyLinkQR() {
-  const maSpan = document.getElementById("maQRcode");
-  const fullLink = maSpan.dataset.fullLink;
-  if (!fullLink) {
-    alert("❌ Chưa có link QR để sao chép.");
-    return;
-  }
-  navigator.clipboard.writeText(fullLink)
-    .then(() => alert("✅ Đã sao chép link QR thành công!"))
-    .catch(err => alert("❌ Lỗi khi sao chép: " + err));
+  const fullLink = document.getElementById("maQRcode").dataset.fullLink;
+  if (!fullLink) return alert("❌ Chưa có link QR để sao chép.");
+  navigator.clipboard.writeText(fullLink).then(
+    () => alert("✅ Đã sao chép link QR!"),
+    err => alert("❌ Lỗi khi sao chép: " + err)
+  );
 }
-// ——— Hàm tạo hàng loạt QR để in ———
-function taoQRInSan() {
-  const soLuong = prompt("Bạn muốn tạo bao nhiêu mã QR in sẵn?", "12");
-  const n = parseInt(soLuong, 10);
-  if (!n || n <= 0) return;
 
-  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?batch=${n}`)
+function taoQRInSan() {
+  const n = parseInt(prompt("Số lượng QR muốn tạo:", "12"), 10);
+  if (!n || n <= 0) return;
+  fetch(proxy(`${BASE_SCRIPT_URL}?batch=${n}`))
     .then(res => res.json())
-    .then(arr => {
+    .then(response => {
+      const arr = JSON.parse(response.contents);
       const container = document.getElementById("qrBatchContainer");
       container.innerHTML = "";
       container.style.display = "flex";
@@ -184,34 +164,20 @@ function taoQRInSan() {
         const div = document.createElement("div");
         div.className = "batch-item";
         div.style.textAlign = "center";
-        div.style.width = "80mm"; // chiều rộng mỗi ô QR
+        div.style.width = "80mm";
         div.innerHTML = `
-          <img src="${item.link}"
-               style="width:70mm; height:70mm; display:block; margin:auto;" />
-          <div style="font-size:12px; margin-top:4px;">${item.code}</div>
-        `;
+          <img src="${item.link}" style="width:70mm;height:70mm;margin:auto;display:block;">
+          <div style="font-size:12px;margin-top:4px;">${item.code}</div>`;
         container.appendChild(div);
       });
-      // Hiện nút in
       document.getElementById("printBatchBtn").style.display = "inline-block";
     })
-    .catch(err => {
-      console.error("Lỗi tạo QR batch:", err);
-      alert("❌ Tạo hàng loạt QR thất bại — kiểm tra console.");
-    });
+    .catch(err => alert("❌ Tạo QR thất bại: " + err));
 }
 
-// ——— Hàm mở trang in A4 ———
 function printBatch() {
   const content = document.getElementById("qrBatchContainer").innerHTML;
-  const css = `
-    <style>
-      @page { size: A4 portrait; margin: 10mm; }
-      body { margin:0; padding:0; display:flex; flex-wrap:wrap; gap:10px; }
-      .batch-item { page-break-inside: avoid; }
-    </style>`;
-  const html = `<html><head><title>In QR Codes</title>${css}</head>
-                <body>${content}</body></html>`;
+  const html = `<html><head><style>@page{size:A4;margin:10mm}body{margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}.batch-item{page-break-inside:avoid}</style></head><body>${content}</body></html>`;
   const w = window.open();
   w.document.write(html);
   w.document.close();
