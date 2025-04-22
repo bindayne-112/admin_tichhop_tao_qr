@@ -73,6 +73,23 @@ function renderRanking(data) {
     tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
     tbody.appendChild(tr);
   });
+
+  // ✅ Gắn phân trang sau khi bảng đã có dữ liệu
+  if (window.rankingDataTable) {
+    window.rankingDataTable.destroy(); // Huỷ nếu bảng đã tồn tại
+  }
+  window.rankingDataTable = new simpleDatatables.DataTable("#rankingTable", {
+    perPage: 10,
+    perPageSelect: false,
+    searchable: false,
+    paging: true,
+    labels: {
+      placeholder: "Tìm kiếm...",
+      perPage: "{select} dòng/trang",
+      noRows: "Không có dữ liệu",
+      info: "Trang {page} / {pages}"
+    }
+  });
 }
 
 function applyFilter() {
@@ -125,7 +142,7 @@ function taoMaQR() {
       if (!link) throw new Error("Không có link trả về");
       if (window.qrCanvas) qrCanvas.value = link;
 
-      const maQR = link.split("?tich=")[1]; // Chỉ hiển thị mã QR
+      const maQR = link.split("?tich=")[1];
       document.getElementById("maQRcode").innerText = maQR;
       document.getElementById("maQRcode").dataset.fullLink = link;
     })
@@ -135,7 +152,6 @@ function taoMaQR() {
     });
 }
 
-// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
 function kiemTraMaQRDaDung() {
   const maQR = document.getElementById("maQRcode").innerText;
   if (!maQR || maQR.includes("Lỗi")) return;
@@ -153,10 +169,8 @@ function kiemTraMaQRDaDung() {
     });
 }
 
-// ✅ Kiểm tra mỗi 5 giây
 setInterval(kiemTraMaQRDaDung, 5000);
 
-// ✅ Sao chép link QR
 function copyLinkQR() {
   const maSpan = document.getElementById("maQRcode");
   const fullLink = maSpan.dataset.fullLink;
