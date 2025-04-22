@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Admin Tích Điểm - Ông Kòi</title>
   <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" defer></script>
-<link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 </head>
 <body>
@@ -53,8 +53,10 @@
 
     <h2>📲 Tạo mã QR cho khách</h2>
     <button onclick="taoMaQR()">Tạo mã QR mới</button>
+    <button onclick="taoQRInSan()" style="margin-left:10px; background:#28a745; color:#fff; padding:6px 12px; border:none; border-radius:4px;">
+      📄 Tạo hàng loạt QR để in sẵn
+    </button>
 
-    <!-- ✅ Đã thay phần hiển thị link QR -->
     <div style="text-align: center; margin-top: 10px;">
       <p><strong>Mã QR:</strong> <span id="maQRcode">Đang tạo...</span></p>
       <button onclick="copyLinkQR()" style="padding: 6px 12px; border-radius: 6px; background-color: orange; color: white; border: none;">
