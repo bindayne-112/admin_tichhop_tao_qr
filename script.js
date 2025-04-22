@@ -1,7 +1,7 @@
 const sheetId = "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo";
 const sheetName = "TichDiem_OngKoi";
 const password = "Testmkbmok";
-const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
+const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX-DHVEzNopT6YSX-PGbuiwFCFUG8WFbBLaMSKfPMNRP3__jdSm_dyFhHo3Jo7OVnxTw/exec";
 const proxy = url => `https://script.google.com/macros/s/AKfycbxX-DHVEzNopT6YSX-PGbuiwFCFUG8WFbBLaMSKfPMNRP3__jdSm_dyFhHo3Jo7OVnxTw/exec?url=${encodeURIComponent(url)}`;
 
 let fullData = [];
