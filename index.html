@@ -66,5 +66,25 @@
   </div>
 
   <script src="script.js"></script>
+<!-- ✅ Gắn phân trang bảng xếp hạng -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const rankingTable = document.querySelector("#rankingTable");
+      if (rankingTable) {
+        new simpleDatatables.DataTable(rankingTable, {
+          perPage: 10,
+          perPageSelect: false,
+          searchable: false,
+          paging: true,
+          labels: {
+            placeholder: "Tìm kiếm...",
+            perPage: "{select} dòng/trang",
+            noRows: "Không có dữ liệu",
+            info: "Trang {page} / {pages}"
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
