@@ -87,13 +87,13 @@ function renderRanking(data) {
 
 // Lọc theo số điện thoại và khoảng thời gian
 function applyFilter() {
-  const s = document.getElementById("searchPhone").value;
-  const st= document.getElementById("startDate").value;
-  const en= document.getElementById("endDate").value;
+  const search = document.getElementById("searchPhone").value;
+  const start  = document.getElementById("startDate").value;
+  const end    = document.getElementById("endDate").value;
   const filtered = fullData.filter(r => {
-    const okPhone = !s || r.phone.includes(s);
+    const okPhone = !search || r.phone.includes(search);
     const t       = new Date(r.time);
-    const okDate  = (!st || t >= new Date(st)) && (!en || t <= new Date(en));
+    const okDate  = (!start || t >= new Date(start)) && (!end || t <= new Date(end));
     return okPhone && okDate;
   });
   renderDataTable(filtered);
@@ -115,7 +115,8 @@ function exportToExcel() {
                         { type:"application/vnd.ms-excel" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
-  a.href     = url; a.download="TichDiem.xlsx";
+  a.href     = url;
+  a.download = "TichDiem.xlsx";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
