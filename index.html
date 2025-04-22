@@ -65,6 +65,19 @@
     </div>
 
     <canvas id="qrCanvas"></canvas>
+
+    <!-- ======== Bắt đầu: khu vực QR batch in A4 ======== -->
+    <div id="qrBatchContainer"
+         style="display:none; flex-wrap:wrap; gap:10px; margin-top:20px;">
+    </div>
+    <button id="printBatchBtn"
+            style="display:none; margin:10px; padding:8px 16px;
+                   background:#007bff; color:#fff; border:none; border-radius:4px;"
+            onclick="printBatch()">
+      🖨️ Mở trang in QR
+    </button>
+    <!-- ======== Kết thúc: khu vực QR batch in A4 ======== -->
+
   </div>
 
   <script src="script.js"></script>
