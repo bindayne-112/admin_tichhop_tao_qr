@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Tích Điểm - Ông Kòi</title>
+  <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" defer></script>
+<link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+  <div id="loginScreen" class="login-box">
+    <h2>🔒 Đăng nhập quản lý</h2>
+    <input type="password" id="password" placeholder="Nhập mật khẩu quản lý" />
+    <button onclick="checkPassword()">Đăng nhập</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <div id="mainScreen" style="display:none;">
+    <h1>👨‍🍳 Quản lý tích điểm - Bánh Mì Ông Kòi</h1>
+
+    <div class="filter-box">
+      <input type="text" id="searchPhone" placeholder="🔎 Tìm theo số điện thoại" />
+      <input type="date" id="startDate" />
+      <input type="date" id="endDate" />
+      <button onclick="applyFilter()">Lọc</button>
+      <button onclick="resetFilter()">Hiện tất cả</button>
+    </div>
+
+    <h2>📋 Danh sách tích điểm</h2>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Số điện thoại</th>
+          <th>Thời gian</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>🏆 Bảng xếp hạng khách hàng</h2>
+    <table id="rankingTable">
+      <thead>
+        <tr>
+          <th>Hạng</th>
+          <th>Số điện thoại</th>
+          <th>Lượt tích điểm</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button onclick="exportToExcel()">📥 Xuất Excel</button>
+
+    <h2>📲 Tạo mã QR cho khách</h2>
+    <button onclick="taoMaQR()">Tạo mã QR mới</button>
+
+    <!-- ✅ Đã thay phần hiển thị link QR -->
+    <div style="text-align: center; margin-top: 10px;">
+      <p><strong>Mã QR:</strong> <span id="maQRcode">Đang tạo...</span></p>
+      <button onclick="copyLinkQR()" style="padding: 6px 12px; border-radius: 6px; background-color: orange; color: white; border: none;">
+        📋 Sao chép link QR
+      </button>
+    </div>
+
+    <canvas id="qrCanvas"></canvas>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
