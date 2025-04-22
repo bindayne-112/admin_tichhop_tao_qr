@@ -2,7 +2,7 @@ const sheetId = "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo";
 const sheetName = "TichDiem_OngKoi";
 const password = "Testmkbmok";
 const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec";
-const proxy = url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+const proxy = url => `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
 let fullData = [];
 
