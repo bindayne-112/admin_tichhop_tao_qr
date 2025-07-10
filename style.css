@@ -1,98 +1,244 @@
+/* Biến màu sắc và cài đặt chung */
+:root {
+  --primary-color: #ff9900;
+  --primary-dark: #e65100;
+  --secondary-color: #ffecb3;
+  --background-color: #fff6e5;
+  --text-color: #333;
+  --border-color: #ddd;
+  --white-color: #fff;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --info-color: #17a2b8;
+  --radius: 8px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #fff6e5;
-  padding: 30px;
-  text-align: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 1em;
+}
+
+main {
+  max-width: 1400px;
+  margin: auto;
 }
 
 h1, h2 {
-  color: #ff6600;
+  color: var(--primary-dark);
+  text-align: center;
 }
 
-.login-box {
-  margin-top: 60px;
+/* Bố cục chính */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2em;
+  align-items: flex-start;
+}
+.qr-generator-box {
+  flex: 1;
+  min-width: 300px;
+  background: var(--white-color);
+  padding: 1.5em;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+  position: sticky;
+  top: 1em;
+}
+.data-box {
+  flex: 3;
+  min-width: 500px;
 }
 
-input, button {
-  padding: 10px;
-  font-size: 16px;
+/* Các thành phần: Nút, Input */
+input[type="text"], input[type="search"], input[type="password"], input[type="date"] {
+  padding: 12px;
+  font-size: 1em;
   margin: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  width: calc(100% - 30px);
+  max-width: 250px;
 }
 
 button {
-  background-color: #ff9900;
-  color: white;
+  padding: 12px 20px;
+  font-size: 1em;
+  background-color: var(--primary-color);
+  color: var(--white-color);
   border: none;
   cursor: pointer;
+  border-radius: var(--radius);
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  margin: 5px;
+  position: relative;
+}
+button:hover {
+  background-color: var(--primary-dark);
+}
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.button-icon {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  padding: 8px;
+  line-height: 1;
+  vertical-align: middle;
 }
 
+/* Hộp đăng nhập */
+.login-box {
+  max-width: 400px;
+  margin: 5em auto;
+  padding: 2em;
+  background: var(--white-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.error-message {
+  color: var(--error-color);
+  margin-top: 1em;
+  min-height: 1.2em;
+}
+
+/* Bảng dữ liệu */
 table {
-  width: 90%;
-  margin: 20px auto;
+  width: 100%;
+  margin: 1.5em 0;
   border-collapse: collapse;
+  box-shadow: var(--shadow);
+  background: var(--white-color);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
-
 th, td {
-  border: 1px solid #ccc;
-  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px;
+  text-align: left;
 }
-
 th {
-  background-color: #ffecb3;
+  background-color: var(--secondary-color);
+}
+.rank-1 td { background-color: #ffd700; font-weight: bold; color: #333; }
+.rank-2 td { background-color: #c0c0c0; color: #333;}
+.rank-3 td { background-color: #cd7f32; color: white;}
+.clickable-phone {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #007bff;
+}
+.clickable-phone:hover {
+    color: var(--primary-dark);
 }
 
-tr:nth-child(1) td {
-  background-color: #fff3cd;
-  font-weight: bold;
-}
-
-tr:nth-child(2) td {
-  background-color: #e3f2fd;
-}
-
-tr:nth-child(3) td {
-  background-color: #d0f0f0;
-}
-
+/* Hộp Filter và QR */
 .filter-box {
-  margin: 20px;
+  margin-bottom: 2em;
+  padding: 1.5em;
+  background: var(--white-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
 }
-
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#qrCanvas {
+  margin-top: 1em;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  height: auto;
+}
 .code-display {
-  margin-top: 10px;
-  font-size: 18px;
-  color: #444;
+  margin-top: 1em;
+  font-size: 1.2em;
+  word-break: break-all;
+}
+.code-display button {
+    font-size: 0.8em;
+    padding: 6px 12px;
 }
 
-/* ✅ Phân trang ngang & cố định chuẩn đẹp */
-.dataTable-pagination {
-  display: flex !important;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 0;
-  margin: 0 auto;
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
 }
-
-.dataTable-pagination * {
-  display: inline-block !important;
-  margin: 2px !important;
+.toast {
+    background-color: #fff;
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    transform: translateX(100%);
+    max-width: 350px;
 }
-
-.dataTable-pagination a {
-  background-color: orange;
-  color: white !important;
-  border-radius: 6px;
-  padding: 6px 12px !important;
-  text-decoration: none;
-  font-weight: bold;
-  transition: 0.2s ease;
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
 }
+.toast.success { border-left: 5px solid var(--success-color); }
+.toast.error { border-left: 5px solid var(--error-color); }
+.toast.info { border-left: 5px solid var(--info-color); }
 
-.dataTable-pagination a:hover,
-.dataTable-pagination a.current,
-.dataTable-pagination a.active {
-  background-color: #e65100;
-  color: #fff !important;
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: var(--radius);
+    position: relative;
+}
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+#modalHistoryTable { margin-top: 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .qr-generator-box {
+    position: static;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
