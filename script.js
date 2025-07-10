@@ -1,5 +1,4 @@
 (function() {
-  // --- CÀI ĐẶT & BIẾN TOÀN CỤC ---
   const CONFIG = {
     sheetId: "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo",
     sheetName: "TichDiem_OngKoi",
@@ -11,39 +10,25 @@
   };
 
   const DOMElements = {
-    loginScreen: document.getElementById("loginScreen"),
-    mainScreen: document.getElementById("mainScreen"),
-    passwordInput: document.getElementById("password"),
-    loginButton: document.getElementById("loginButton"),
-    loginError: document.getElementById("loginError"),
-    dataTableBody: document.querySelector("#dataTable tbody"),
-    rankingTableBody: document.querySelector("#rankingTable tbody"),
-    rankingTitle: document.getElementById("rankingTitle"),
-    searchPhone: document.getElementById("searchPhone"),
-    startDate: document.getElementById("startDate"),
-    endDate: document.getElementById("endDate"),
-    filterButton: document.getElementById("filterButton"),
-    resetButton: document.getElementById("resetButton"),
-    exportButton: document.getElementById("exportButton"),
-    refreshButton: document.getElementById("refreshButton"),
-    taoMaQRButton: document.getElementById("taoMaQRButton"),
-    copyLinkQRButton: document.getElementById("copyLinkQRButton"),
-    qrCanvas: document.getElementById("qrCanvas"),
-    qrCodeInfo: document.getElementById("qrCodeInfo"),
-    maQRcode: document.getElementById("maQRcode"),
-    toastContainer: document.getElementById("toast-container"),
-    historyModal: document.getElementById("historyModal"),
-    modalTitle: document.getElementById("modalTitle"),
-    modalHistoryBody: document.querySelector("#modalHistoryTable tbody"),
-    modalCloseBtn: document.querySelector(".modal-close")
+    loginScreen: document.getElementById("loginScreen"), mainScreen: document.getElementById("mainScreen"),
+    passwordInput: document.getElementById("password"), loginButton: document.getElementById("loginButton"),
+    loginError: document.getElementById("loginError"), dataTableBody: document.querySelector("#dataTable tbody"),
+    rankingTableBody: document.querySelector("#rankingTable tbody"), rankingTitle: document.getElementById("rankingTitle"),
+    searchPhone: document.getElementById("searchPhone"), startDate: document.getElementById("startDate"),
+    endDate: document.getElementById("endDate"), resetButton: document.getElementById("resetButton"),
+    exportButton: document.getElementById("exportButton"), refreshButton: document.getElementById("refreshButton"),
+    taoMaQRButton: document.getElementById("taoMaQRButton"), copyLinkQRButton: document.getElementById("copyLinkQRButton"),
+    qrCanvas: document.getElementById("qrCanvas"), qrCodeInfo: document.getElementById("qrCodeInfo"),
+    maQRcode: document.getElementById("maQRcode"), toastContainer: document.getElementById("toast-container"),
+    historyModal: document.getElementById("historyModal"), modalTitle: document.getElementById("modalTitle"),
+    modalHistoryBody: document.querySelector("#modalHistoryTable tbody"), modalCloseBtn: document.querySelector(".modal-close"),
+    dashboard: document.getElementById("dashboard")
   };
 
   let fullData = [];
-  let dataTableInstance = null;
-  let qrCheckTimer = null;
+  let dataTableInstance = null; let qrCheckTimer = null;
   let qrCanvasInstance = null;
 
-  // --- HÀM KHỞI TẠO & SỰ KIỆN ---
   document.addEventListener("DOMContentLoaded", initialize);
 
   function initialize() {
@@ -55,8 +40,10 @@
   function setupEventListeners() {
     DOMElements.loginButton.addEventListener("click", checkPassword);
     DOMElements.passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") checkPassword(); });
-    DOMElements.filterButton.addEventListener("click", applyFilter);
-    DOMElements.resetButton.addEventListener("click", resetFilter);
+    DOMElements.searchPhone.addEventListener("input", applyAllFilters);
+    DOMElements.startDate.addEventListener("change", applyAllFilters);
+    DOMElements.endDate.addEventListener("change", applyAllFilters);
+    DOMElements.resetButton.addEventListener("click", resetAllFilters);
     DOMElements.exportButton.addEventListener("click", exportToExcel);
     DOMElements.refreshButton.addEventListener("click", () => loadData(true));
     DOMElements.taoMaQRButton.addEventListener("click", taoMaQR);
@@ -67,7 +54,6 @@
     DOMElements.rankingTableBody.addEventListener("click", handleTableClick);
   }
 
-  // --- XỬ LÝ ĐĂNG NHẬP ---
   function checkPassword() {
     if (DOMElements.passwordInput.value === CONFIG.password) {
       localStorage.setItem("isLoggedIn", "true");
@@ -84,7 +70,14 @@
     taoMaQR();
   }
   
-  // --- XỬ LÝ DỮ LIỆU ---
+  const parseDate = (dateString) => {
+    try {
+        const [datePart, timePart] = dateString.split(' ');
+        const [day, month, year] = datePart.split('/');
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart || '00:00:00'}`);
+    } catch (e) { return null; }
+  };
+
   async function loadData(isRefresh = false) {
     toggleButtonLoading(DOMElements.refreshButton, true);
     if(isRefresh) showToast("Đang cập nhật dữ liệu mới nhất...", "info");
@@ -95,19 +88,14 @@
       
       fullData = data.map(row => ({
         phone: ("0" + (row["SỐ ĐIỆN THOẠI"]?.toString().trim() || "")).slice(-10),
-        time: row["THỜI GIAN"]
-      })).filter(row => row.phone.length === 10 && /^\d+$/.test(row.phone) && row.time);
+        time: row["THỜI GIAN"],
+        dateObj: parseDate(row["THỜI GIAN"])
+      })).filter(row => row.phone.length === 10 && /^\d+$/.test(row.phone) && row.dateObj);
 
-      const parseDate = (dateString) => {
-          try {
-              const [datePart, timePart] = dateString.split(' ');
-              const [day, month, year] = datePart.split('/');
-              return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart || '00:00:00'}`);
-          } catch (e) { return new Date(0); }
-      };
-      fullData.sort((a, b) => parseDate(b.time) - parseDate(a.time));
+      fullData.sort((a, b) => b.dateObj - a.dateObj);
 
-      renderUI(fullData);
+      updateDashboard(fullData);
+      applyAllFilters();
       if(isRefresh) showToast("Dữ liệu đã được làm mới!", "success");
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu:", err);
@@ -115,6 +103,28 @@
     } finally {
         toggleButtonLoading(DOMElements.refreshButton, false);
     }
+  }
+
+  function applyAllFilters() {
+    const search = DOMElements.searchPhone.value.trim().toLowerCase();
+    const start = DOMElements.startDate.value ? new Date(DOMElements.startDate.value) : null;
+    const end = DOMElements.endDate.value ? new Date(DOMElements.endDate.value) : null;
+    if(start) start.setHours(0,0,0,0);
+    if(end) end.setHours(23,59,59,999);
+    
+    const filtered = fullData.filter(row => {
+      const matchPhone = !search || row.phone.includes(search);
+      const matchDate = (!start || row.dateObj >= start) && (!end || row.dateObj <= end);
+      return matchPhone && matchDate;
+    });
+    renderUI(filtered);
+  }
+
+  function resetAllFilters() {
+    DOMElements.searchPhone.value = "";
+    DOMElements.startDate.value = "";
+    DOMElements.endDate.value = "";
+    applyAllFilters();
   }
 
   function renderUI(data) {
@@ -155,47 +165,35 @@
     DOMElements.rankingTableBody.replaceChildren(fragment);
   }
 
-  function applyFilter() {
-    const search = DOMElements.searchPhone.value.trim();
-    const start = DOMElements.startDate.value;
-    const end = DOMElements.endDate.value;
+  function updateDashboard(data) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const checkinsToday = data.filter(row => row.dateObj >= today);
     
-    const filtered = fullData.filter(row => {
-      const matchPhone = !search || row.phone.includes(search);
-      try {
-        const rowDate = new Date(row.time.split(" ")[0].split("/").reverse().join("-") + "T" + row.time.split(" ")[1]);
-        const startDate = start ? new Date(start) : null;
-        const endDate = end ? new Date(end) : null;
-        if (endDate) endDate.setHours(23, 59, 59, 999);
-        const matchDate = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
-        return matchPhone && matchDate;
-      } catch(e) { return matchPhone; }
-    });
-    renderUI(filtered);
+    const firstCheckins = new Map();
+    for (let i = data.length - 1; i >= 0; i--) {
+        firstCheckins.set(data[i].phone, data[i].dateObj);
+    }
+
+    const newCustomersToday = Array.from(firstCheckins.values()).filter(date => date >= today).length;
+    const totalCustomers = firstCheckins.size;
+
+    const kpis = [
+        { label: 'Lượt Quét Hôm Nay', value: checkinsToday.length },
+        { label: 'Khách Hàng Mới Hôm Nay', value: newCustomersToday },
+        { label: 'Tổng Số Khách Hàng', value: totalCustomers },
+    ];
+    DOMElements.dashboard.innerHTML = kpis.map(kpi => `
+        <div class="kpi-card">
+            <div class="value">${kpi.value}</div>
+            <div class="label">${kpi.label}</div>
+        </div>
+    `).join('');
   }
 
-  function resetFilter() {
-    DOMElements.searchPhone.value = "";
-    DOMElements.startDate.value = "";
-    DOMElements.endDate.value = "";
-    renderUI(fullData);
-  }
-
-  function exportToExcel() {
-    const table = document.getElementById("dataTable");
-    const tableHTML = table.outerHTML.replace(/ /g, '%20');
-    const downloadLink = document.createElement("a");
-    document.body.appendChild(downloadLink);
-    downloadLink.href = 'data:application/vnd.ms-excel,' + tableHTML;
-    downloadLink.download = 'LichSuTichDiem.xls';
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  }
-
-  // --- XỬ LÝ MÃ QR ---
   async function taoMaQR() {
     if (qrCheckTimer) clearInterval(qrCheckTimer);
-
     toggleButtonLoading(DOMElements.taoMaQRButton, true, "Đang tạo...");
     try {
         const res = await fetch(CONFIG.qrApiUrl);
@@ -204,14 +202,11 @@
         const originalLink = decodeURIComponent(data.link);
         const maQR = originalLink.split("?tich=")[1] || null;
         if (!maQR) throw new Error("Không thể trích xuất mã từ API.");
-        
         const professionalLink = `${CONFIG.professionalBaseUrl}?tich=${maQR}`;
-
         qrCanvasInstance.value = professionalLink;
         DOMElements.maQRcode.innerText = maQR;
         DOMElements.maQRcode.dataset.fullLink = professionalLink;
         DOMElements.qrCodeInfo.style.display = "block";
-        
         qrCheckTimer = setInterval(kiemTraMaQRDaDung, CONFIG.qrCheckInterval);
     } catch(err) {
         showToast(err.message || "Lỗi tạo mã QR!", "error");
@@ -219,26 +214,37 @@
         toggleButtonLoading(DOMElements.taoMaQRButton, false, "Tạo mã QR mới");
     }
   }
-  
   async function kiemTraMaQRDaDung() {
     const maQR = DOMElements.maQRcode.innerText;
     if (!maQR || maQR.includes("Lỗi") || maQR.includes("N/A")) return;
-    
     try {
         const res = await fetch(`${CONFIG.qrApiUrl}?check=1&code=${maQR}&t=${new Date().getTime()}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.status === "USED") {
-            console.log("✅ Mã QR đã dùng → Tự động tạo mã mới...");
             showToast("Mã QR đã được sử dụng. Đang tạo mã mới...", "info");
             await taoMaQR();
         }
-    } catch(err) {
-        console.error("Lỗi khi kiểm tra mã QR:", err);
-    }
+    } catch(err) { console.error("Lỗi khi kiểm tra mã QR:", err); }
   }
-
-  // --- HÀM TIỆN ÍCH ---
+  function handleTableClick(event) {
+      const target = event.target;
+      if (target && target.classList.contains('clickable-phone')) {
+          showCustomerHistory(target.dataset.phone);
+      }
+  }
+  function showCustomerHistory(phone) {
+      const history = fullData.filter(row => row.phone === phone);
+      DOMElements.modalTitle.innerText = `Lịch sử của SĐT: ${phone}`;
+      const fragment = document.createDocumentFragment();
+      history.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.time}</td>`;
+          fragment.appendChild(tr);
+      });
+      DOMElements.modalHistoryBody.replaceChildren(fragment);
+      DOMElements.historyModal.style.display = "block";
+  }
   function showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
@@ -252,7 +258,6 @@
         }, 3000);
     }, 10);
   }
-  
   function toggleButtonLoading(button, isLoading, loadingText = "...") {
       button.disabled = isLoading;
       if (isLoading) {
@@ -262,35 +267,9 @@
           button.innerHTML = button.dataset.originalText || "Làm mới dữ liệu";
       }
   }
-
-  function handleTableClick(event) {
-      const target = event.target;
-      if (target && target.classList.contains('clickable-phone')) {
-          const phone = target.dataset.phone;
-          showCustomerHistory(phone);
-      }
-  }
-
-  function showCustomerHistory(phone) {
-      const history = fullData.filter(row => row.phone === phone);
-      DOMElements.modalTitle.innerText = `Lịch sử của SĐT: ${phone}`;
-      
-      const fragment = document.createDocumentFragment();
-      history.forEach(row => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${row.time}</td>`;
-          fragment.appendChild(tr);
-      });
-      DOMElements.modalHistoryBody.replaceChildren(fragment);
-      DOMElements.historyModal.style.display = "block";
-  }
-  
   function copyLinkQR() {
     const fullLink = DOMElements.maQRcode.dataset.fullLink;
-    if (!fullLink) {
-      showToast("Chưa có link QR để sao chép.", "error");
-      return;
-    }
+    if (!fullLink) { showToast("Chưa có link QR để sao chép.", "error"); return; }
     const textArea = document.createElement("textarea");
     textArea.value = fullLink;
     document.body.appendChild(textArea);
@@ -303,5 +282,15 @@
       showToast("Lỗi khi sao chép: " + err, "error");
     }
     document.body.removeChild(textArea);
+  }
+  function exportToExcel() {
+    const table = document.getElementById("dataTable");
+    const tableHTML = table.outerHTML.replace(/ /g, '%20');
+    const downloadLink = document.createElement("a");
+    document.body.appendChild(downloadLink);
+    downloadLink.href = 'data:application/vnd.ms-excel,' + tableHTML;
+    downloadLink.download = 'LichSuTichDiem.xls';
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   }
 })();
