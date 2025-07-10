@@ -1,170 +1,307 @@
-const sheetId = "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo";
-const sheetName = "TichDiem_OngKoi";
-const password = "Testmkbmok";
-let fullData = [];
+(function() {
+  // --- CÀI ĐẶT & BIẾN TOÀN CỤC ---
+  const CONFIG = {
+    sheetId: "1Kgy0J4utlkLnG2LMrjowwcevU7FUsK9V8bquvDHCYLo",
+    sheetName: "TichDiem_OngKoi",
+    password: "Testmkbmok",
+    qrCheckInterval: 5000,
+    qrApiUrl: "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec",
+    rankingLimit: 10,
+    professionalBaseUrl: "https://banhmiongkoi.com/"
+  };
 
-if (localStorage.getItem("isLoggedIn") === "true") {
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainScreen").style.display = "block";
-    loadData();
-  });
-}
+  const DOMElements = {
+    loginScreen: document.getElementById("loginScreen"),
+    mainScreen: document.getElementById("mainScreen"),
+    passwordInput: document.getElementById("password"),
+    loginButton: document.getElementById("loginButton"),
+    loginError: document.getElementById("loginError"),
+    dataTableBody: document.querySelector("#dataTable tbody"),
+    rankingTableBody: document.querySelector("#rankingTable tbody"),
+    rankingTitle: document.getElementById("rankingTitle"),
+    searchPhone: document.getElementById("searchPhone"),
+    startDate: document.getElementById("startDate"),
+    endDate: document.getElementById("endDate"),
+    filterButton: document.getElementById("filterButton"),
+    resetButton: document.getElementById("resetButton"),
+    exportButton: document.getElementById("exportButton"),
+    refreshButton: document.getElementById("refreshButton"),
+    taoMaQRButton: document.getElementById("taoMaQRButton"),
+    copyLinkQRButton: document.getElementById("copyLinkQRButton"),
+    qrCanvas: document.getElementById("qrCanvas"),
+    qrCodeInfo: document.getElementById("qrCodeInfo"),
+    maQRcode: document.getElementById("maQRcode"),
+    toastContainer: document.getElementById("toast-container"),
+    historyModal: document.getElementById("historyModal"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalHistoryBody: document.querySelector("#modalHistoryTable tbody"),
+    modalCloseBtn: document.querySelector(".modal-close")
+  };
 
-function checkPassword() {
-  const input = document.getElementById("password").value;
-  if (input === password) {
-    localStorage.setItem("isLoggedIn", "true");
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainScreen").style.display = "block";
-    loadData();
-  } else {
-    document.getElementById("loginError").innerText = "Sai mật khẩu!";
+  let fullData = [];
+  let dataTableInstance = null;
+  let qrCheckTimer = null;
+  let qrCanvasInstance = null;
+
+  // --- HÀM KHỞI TẠO & SỰ KIỆN ---
+  document.addEventListener("DOMContentLoaded", initialize);
+
+  function initialize() {
+    setupEventListeners();
+    qrCanvasInstance = new QRious({ element: DOMElements.qrCanvas, size: 250 });
+    if (localStorage.getItem("isLoggedIn") === "true") showMainScreen();
   }
-}
 
-function loadData() {
-  fetch(`https://opensheet.elk.sh/${sheetId}/${sheetName}`)
-    .then(res => res.json())
-    .then(data => {
-      fullData = data.map(row => {
-        let phone = row["SỐ ĐIỆN THOẠI"];
-        if (phone && phone.length === 9 && !isNaN(phone)) {
-          phone = "0" + phone;
-        }
-        return {
-          phone,
-          time: row["THỜI GIAN"]
-        };
-      }).filter(row => row.phone && row.phone.length === 10 && !isNaN(row.phone));
+  function setupEventListeners() {
+    DOMElements.loginButton.addEventListener("click", checkPassword);
+    DOMElements.passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") checkPassword(); });
+    DOMElements.filterButton.addEventListener("click", applyFilter);
+    DOMElements.resetButton.addEventListener("click", resetFilter);
+    DOMElements.exportButton.addEventListener("click", exportToExcel);
+    DOMElements.refreshButton.addEventListener("click", () => loadData(true));
+    DOMElements.taoMaQRButton.addEventListener("click", taoMaQR);
+    DOMElements.copyLinkQRButton.addEventListener("click", copyLinkQR);
+    DOMElements.modalCloseBtn.addEventListener("click", () => DOMElements.historyModal.style.display = "none");
+    window.addEventListener("click", (e) => { if (e.target == DOMElements.historyModal) DOMElements.historyModal.style.display = "none"; });
+    DOMElements.dataTableBody.addEventListener("click", handleTableClick);
+    DOMElements.rankingTableBody.addEventListener("click", handleTableClick);
+  }
 
-      renderDataTable(fullData);
-      renderRanking(fullData);
-    })
-    .catch(err => {
+  // --- XỬ LÝ ĐĂNG NHẬP ---
+  function checkPassword() {
+    if (DOMElements.passwordInput.value === CONFIG.password) {
+      localStorage.setItem("isLoggedIn", "true");
+      showMainScreen();
+    } else {
+      DOMElements.loginError.innerText = "Sai mật khẩu!";
+    }
+  }
+
+  function showMainScreen() {
+    DOMElements.loginScreen.style.display = "none";
+    DOMElements.mainScreen.style.display = "block";
+    loadData();
+    taoMaQR();
+  }
+  
+  // --- XỬ LÝ DỮ LIỆU ---
+  async function loadData(isRefresh = false) {
+    toggleButtonLoading(DOMElements.refreshButton, true);
+    if(isRefresh) showToast("Đang cập nhật dữ liệu mới nhất...", "info");
+    try {
+      const res = await fetch(`https://opensheet.elk.sh/${CONFIG.sheetId}/${CONFIG.sheetName}?${new Date().getTime()}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      
+      fullData = data.map(row => ({
+        phone: ("0" + (row["SỐ ĐIỆN THOẠI"]?.toString().trim() || "")).slice(-10),
+        time: row["THỜI GIAN"]
+      })).filter(row => row.phone.length === 10 && /^\d+$/.test(row.phone) && row.time);
+
+      const parseDate = (dateString) => {
+          try {
+              const [datePart, timePart] = dateString.split(' ');
+              const [day, month, year] = datePart.split('/');
+              return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart || '00:00:00'}`);
+          } catch (e) { return new Date(0); }
+      };
+      fullData.sort((a, b) => parseDate(b.time) - parseDate(a.time));
+
+      renderUI(fullData);
+      if(isRefresh) showToast("Dữ liệu đã được làm mới!", "success");
+    } catch (err) {
       console.error("Lỗi khi tải dữ liệu:", err);
-      alert("❌ Không thể tải dữ liệu từ Google Sheet. Vui lòng kiểm tra kết nối.");
-    });
-}
-
-function renderDataTable(data) {
-  const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = "";
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${row.phone}</td><td>${row.time}</td>`;
-    tbody.appendChild(tr);
-  });
-  new simpleDatatables.DataTable("#dataTable");
-}
-
-function renderRanking(data) {
-  const counts = {};
-  data.forEach(row => {
-    counts[row.phone] = (counts[row.phone] || 0) + 1;
-  });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const tbody = document.querySelector("#rankingTable tbody");
-  tbody.innerHTML = "";
-
-  sorted.forEach(([phone, count], index) => {
-    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${medal}</td><td>${phone}</td><td>${count}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-function applyFilter() {
-  const search = document.getElementById("searchPhone").value;
-  const start = document.getElementById("startDate").value;
-  const end = document.getElementById("endDate").value;
-  const filtered = fullData.filter(row => {
-    const matchPhone = search === "" || row.phone.includes(search);
-    const matchDate = (!start || new Date(row.time) >= new Date(start)) &&
-                      (!end || new Date(row.time) <= new Date(end));
-    return matchPhone && matchDate;
-  });
-  renderDataTable(filtered);
-  renderRanking(filtered);
-}
-
-function resetFilter() {
-  renderDataTable(fullData);
-  renderRanking(fullData);
-  document.getElementById("searchPhone").value = "";
-  document.getElementById("startDate").value = "";
-  document.getElementById("endDate").value = "";
-}
-
-function exportToExcel() {
-  const table = document.getElementById("dataTable").outerHTML;
-  const blob = new Blob(["\ufeff" + table], { type: "application/vnd.ms-excel" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "TichDiem.xlsx";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// ✅ Tạo mã QR từ Apps Script và hiển thị
-document.addEventListener("DOMContentLoaded", () => {
-  const canvasEl = document.getElementById("qrCanvas");
-  if (canvasEl) {
-    window.qrCanvas = new QRious({ element: canvasEl, size: 250 });
+      showToast("Không thể tải dữ liệu. Vui lòng thử lại.", "error");
+    } finally {
+        toggleButtonLoading(DOMElements.refreshButton, false);
+    }
   }
-});
 
-function taoMaQR() {
-  fetch("https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec")
-    .then(res => res.json())
-    .then(data => {
-      const link = decodeURIComponent(data.link);
-      if (!link) throw new Error("Không có link trả về");
-      if (window.qrCanvas) qrCanvas.value = link;
+  function renderUI(data) {
+    renderDataTable(data);
+    renderRanking(data);
+  }
 
-      const maQR = link.split("?tich=")[1]; // Chỉ hiển thị mã QR
-      document.getElementById("maQRcode").innerText = maQR;
-      document.getElementById("maQRcode").dataset.fullLink = link;
-    })
-    .catch(err => {
-      document.getElementById("maQRcode").innerText = "❌ Lỗi kết nối khi tạo mã QR!";
-      console.error("Lỗi tạo mã QR:", err);
+  function renderDataTable(data) {
+    if (dataTableInstance) dataTableInstance.destroy();
+    const fragment = document.createDocumentFragment();
+    data.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><span class="clickable-phone" data-phone="${row.phone}">${row.phone}</span></td><td>${row.time}</td>`;
+      fragment.appendChild(tr);
     });
-}
+    DOMElements.dataTableBody.replaceChildren(fragment);
+    dataTableInstance = new simpleDatatables.DataTable("#dataTable");
+  }
 
-// ✅ Tự động kiểm tra nếu mã QR đã dùng thì tạo mã mới
-function kiemTraMaQRDaDung() {
-  const maQR = document.getElementById("maQRcode").innerText;
-  if (!maQR || maQR.includes("Lỗi")) return;
+  function renderRanking(data) {
+    DOMElements.rankingTitle.innerText = `🏆 Bảng xếp hạng (Top ${CONFIG.rankingLimit})`;
+    const counts = data.reduce((acc, row) => {
+      acc[row.phone] = (acc[row.phone] || 0) + 1;
+      return acc;
+    }, {});
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const topRanking = sorted.slice(0, CONFIG.rankingLimit);
+    
+    const fragment = document.createDocumentFragment();
+    topRanking.forEach(([phone, count], index) => {
+      const rank = index + 1;
+      const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      const tr = document.createElement("tr");
+      if (rank <= 3) tr.classList.add(`rank-${rank}`);
+      tr.innerHTML = `<td>${medal}</td><td><span class="clickable-phone" data-phone="${phone}">${phone}</span></td><td>${count}</td>`;
+      fragment.appendChild(tr);
+    });
+    DOMElements.rankingTableBody.replaceChildren(fragment);
+  }
 
-  fetch(`https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec?check=1&code=${maQR}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === "USED") {
-        console.log("✅ Mã QR đã dùng → tạo mã mới...");
-        taoMaQR();
+  function applyFilter() {
+    const search = DOMElements.searchPhone.value.trim();
+    const start = DOMElements.startDate.value;
+    const end = DOMElements.endDate.value;
+    
+    const filtered = fullData.filter(row => {
+      const matchPhone = !search || row.phone.includes(search);
+      try {
+        const rowDate = new Date(row.time.split(" ")[0].split("/").reverse().join("-") + "T" + row.time.split(" ")[1]);
+        const startDate = start ? new Date(start) : null;
+        const endDate = end ? new Date(end) : null;
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+        const matchDate = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
+        return matchPhone && matchDate;
+      } catch(e) { return matchPhone; }
+    });
+    renderUI(filtered);
+  }
+
+  function resetFilter() {
+    DOMElements.searchPhone.value = "";
+    DOMElements.startDate.value = "";
+    DOMElements.endDate.value = "";
+    renderUI(fullData);
+  }
+
+  function exportToExcel() {
+    const table = document.getElementById("dataTable");
+    const tableHTML = table.outerHTML.replace(/ /g, '%20');
+    const downloadLink = document.createElement("a");
+    document.body.appendChild(downloadLink);
+    downloadLink.href = 'data:application/vnd.ms-excel,' + tableHTML;
+    downloadLink.download = 'LichSuTichDiem.xls';
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }
+
+  // --- XỬ LÝ MÃ QR ---
+  async function taoMaQR() {
+    if (qrCheckTimer) clearInterval(qrCheckTimer);
+
+    toggleButtonLoading(DOMElements.taoMaQRButton, true, "Đang tạo...");
+    try {
+        const res = await fetch(CONFIG.qrApiUrl);
+        if (!res.ok) throw new Error("Lỗi mạng khi tạo mã.");
+        const data = await res.json();
+        const originalLink = decodeURIComponent(data.link);
+        const maQR = originalLink.split("?tich=")[1] || null;
+        if (!maQR) throw new Error("Không thể trích xuất mã từ API.");
+        
+        const professionalLink = `${CONFIG.professionalBaseUrl}?tich=${maQR}`;
+
+        qrCanvasInstance.value = professionalLink;
+        DOMElements.maQRcode.innerText = maQR;
+        DOMElements.maQRcode.dataset.fullLink = professionalLink;
+        DOMElements.qrCodeInfo.style.display = "block";
+        
+        qrCheckTimer = setInterval(kiemTraMaQRDaDung, CONFIG.qrCheckInterval);
+    } catch(err) {
+        showToast(err.message || "Lỗi tạo mã QR!", "error");
+    } finally {
+        toggleButtonLoading(DOMElements.taoMaQRButton, false, "Tạo mã QR mới");
+    }
+  }
+  
+  async function kiemTraMaQRDaDung() {
+    const maQR = DOMElements.maQRcode.innerText;
+    if (!maQR || maQR.includes("Lỗi") || maQR.includes("N/A")) return;
+    
+    try {
+        const res = await fetch(`${CONFIG.qrApiUrl}?check=1&code=${maQR}&t=${new Date().getTime()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === "USED") {
+            console.log("✅ Mã QR đã dùng → Tự động tạo mã mới...");
+            showToast("Mã QR đã được sử dụng. Đang tạo mã mới...", "info");
+            await taoMaQR();
+        }
+    } catch(err) {
+        console.error("Lỗi khi kiểm tra mã QR:", err);
+    }
+  }
+
+  // --- HÀM TIỆN ÍCH ---
+  function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    DOMElements.toastContainer.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add("show");
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }, 10);
+  }
+  
+  function toggleButtonLoading(button, isLoading, loadingText = "...") {
+      button.disabled = isLoading;
+      if (isLoading) {
+          button.dataset.originalText = button.innerHTML;
+          button.innerHTML = loadingText;
+      } else {
+          button.innerHTML = button.dataset.originalText || "Làm mới dữ liệu";
       }
-    })
-    .catch(err => {
-      console.error("Lỗi khi kiểm tra mã QR:", err);
-    });
-}
-
-// ✅ Kiểm tra mỗi 5 giây
-setInterval(kiemTraMaQRDaDung, 5000);
-
-// ✅ Sao chép link QR
-function copyLinkQR() {
-  const maSpan = document.getElementById("maQRcode");
-  const fullLink = maSpan.dataset.fullLink;
-  if (!fullLink) {
-    alert("❌ Chưa có link QR để sao chép.");
-    return;
   }
-  navigator.clipboard.writeText(fullLink)
-    .then(() => alert("✅ Đã sao chép link QR thành công!"))
-    .catch(err => alert("❌ Lỗi khi sao chép: " + err));
-}
+
+  function handleTableClick(event) {
+      const target = event.target;
+      if (target && target.classList.contains('clickable-phone')) {
+          const phone = target.dataset.phone;
+          showCustomerHistory(phone);
+      }
+  }
+
+  function showCustomerHistory(phone) {
+      const history = fullData.filter(row => row.phone === phone);
+      DOMElements.modalTitle.innerText = `Lịch sử của SĐT: ${phone}`;
+      
+      const fragment = document.createDocumentFragment();
+      history.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.time}</td>`;
+          fragment.appendChild(tr);
+      });
+      DOMElements.modalHistoryBody.replaceChildren(fragment);
+      DOMElements.historyModal.style.display = "block";
+  }
+  
+  function copyLinkQR() {
+    const fullLink = DOMElements.maQRcode.dataset.fullLink;
+    if (!fullLink) {
+      showToast("Chưa có link QR để sao chép.", "error");
+      return;
+    }
+    const textArea = document.createElement("textarea");
+    textArea.value = fullLink;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast("Đã sao chép link QR!", "success");
+    } catch (err) {
+      showToast("Lỗi khi sao chép: " + err, "error");
+    }
+    document.body.removeChild(textArea);
+  }
+})();
