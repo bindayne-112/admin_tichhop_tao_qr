@@ -18,9 +18,7 @@
   <main>
     <!-- Màn hình đăng nhập -->
     <section id="loginScreen" class="login-box">
-      <header>
-        <h2>🔒 Đăng nhập quản lý</h2>
-      </header>
+      <header><h2>🔒 Đăng nhập quản lý</h2></header>
       <input type="password" id="password" placeholder="Nhập mật khẩu quản lý" />
       <button id="loginButton">Đăng nhập</button>
       <p id="loginError" class="error-message"></p>
@@ -28,12 +26,11 @@
 
     <!-- Màn hình chính -->
     <section id="mainScreen" style="display:none;">
-      <header>
-        <h1>👨‍🍳 Quản lý tích điểm - Bánh Mì Ông Kòi</h1>
-      </header>
+      <header><h1>👨‍🍳 Quản lý tích điểm - Bánh Mì Ông Kòi</h1></header>
 
+      <section id="dashboard" class="dashboard"></section>
+      
       <div class="container">
-        <!-- Vùng tạo QR Code -->
         <div class="qr-generator-box">
           <h2>📲 Tạo và Hiển thị mã QR</h2>
           <button id="taoMaQRButton">Tạo mã QR mới</button>
@@ -44,41 +41,25 @@
           </div>
         </div>
 
-        <!-- Vùng dữ liệu -->
         <div class="data-box">
           <div class="filter-box">
-            <input type="search" id="searchPhone" placeholder="🔎 Tìm theo SĐT" />
+            <input type="search" id="searchPhone" placeholder="🔎 Tìm SĐT theo thời gian thực..." />
             <input type="date" id="startDate" />
             <input type="date" id="endDate" />
-            <button id="filterButton">Lọc</button>
-            <button id="resetButton">Hiện tất cả</button>
+            <button id="resetButton">Reset</button>
           </div>
 
           <div class="data-header">
-            <h2 id="rankingTitle">🏆 Bảng xếp hạng</h2>
+            <h2 id="rankingTitle">� Bảng xếp hạng</h2>
             <button id="refreshButton" class="button-icon" title="Làm mới dữ liệu">🔄</button>
           </div>
-          <div class="table-responsive">
-            <table id="rankingTable">
-              <thead>
-                <tr><th>Hạng</th><th>Số điện thoại</th><th>Lượt</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+          <div class="table-responsive"><table id="rankingTable"><thead><tr><th>Hạng</th><th>Số điện thoại</th><th>Lượt</th></tr></thead><tbody></tbody></table></div>
           
           <hr>
 
           <h2>📋 Lịch sử tích điểm</h2>
           <button id="exportButton">📥 Xuất Excel</button>
-          <div class="table-responsive">
-            <table id="dataTable">
-              <thead>
-                <tr><th>Số điện thoại</th><th>Thời gian</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+          <div class="table-responsive"><table id="dataTable"><thead><tr><th>Số điện thoại</th><th>Thời gian</th></tr></thead><tbody></tbody></table></div>
         </div>
       </div>
     </section>
@@ -89,12 +70,7 @@
     <div class="modal-content">
       <span class="modal-close">&times;</span>
       <h2 id="modalTitle">Lịch sử tích điểm</h2>
-      <div class="table-responsive">
-        <table id="modalHistoryTable">
-          <thead><tr><th>Thời gian</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <div class="table-responsive"><table id="modalHistoryTable"><thead><tr><th>Thời gian</th></tr></thead><tbody></tbody></table></div>
     </div>
   </div>
 
@@ -106,3 +82,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+�
