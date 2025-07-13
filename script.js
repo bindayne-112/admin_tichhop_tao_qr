@@ -6,7 +6,7 @@
     qrCheckInterval: 5000,
     qrApiUrl: "https://script.google.com/macros/s/AKfycbzgrAJB266q718FuMZG6Cnu5pMFsh6XbnlGD8VTt1pQ4pIfftGcCdyBkoKlxyAvRPxUzw/exec",
     rankingLimit: 10,
-    professionalBaseUrl: "https://banhmiongkoi.com/"
+    professionalBaseUrl: "https://banhmiongkoi.com/tichdiem.html"
   };
 
   const DOMElements = {
