@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Tích Điểm - Ông Kòi</title>
   
+  <!-- NÂNG CẤP: Thẻ cần thiết cho PWA -->
+  <meta name="theme-color" content="#4a90e2"/>
+  <link rel="manifest" href="manifest.json">
+
   <!-- Thư viện ngoài -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css">
   
@@ -50,7 +54,7 @@
           </div>
 
           <div class="data-header">
-            <h2 id="rankingTitle">� Bảng xếp hạng</h2>
+            <h2 id="rankingTitle">🏆 Bảng xếp hạng</h2>
             <button id="refreshButton" class="button-icon" title="Làm mới dữ liệu">🔄</button>
           </div>
           <div class="table-responsive"><table id="rankingTable"><thead><tr><th>Hạng</th><th>Số điện thoại</th><th>Lượt</th></tr></thead><tbody></tbody></table></div>
@@ -80,6 +84,20 @@
   
   <!-- JavaScript của bạn -->
   <script src="script.js"></script>
+
+  <!-- NÂNG CẤP: Script để đăng ký Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('Admin ServiceWorker registered successfully.');
+                })
+                .catch(err => {
+                    console.log('Admin ServiceWorker registration failed: ', err);
+                });
+        });
+    }
+  </script>
 </body>
 </html>
-�
