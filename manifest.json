@@ -1,0 +1,21 @@
+{
+  "name": "Ông Kòi - Admin Tạo Mã",
+  "short_name": "Admin QR",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4a90e2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/1tv3ZfH0/LOGO-1.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.postimg.cc/1tv3ZfH0/LOGO-1.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
